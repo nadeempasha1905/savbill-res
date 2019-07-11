@@ -15,4 +15,9 @@ public interface ICashManagement {
 	JSONObject getreceiptsummarydetails(JSONObject object);
 	JSONObject savereceiptdetails(JSONObject object, HttpServletRequest request, HttpServletResponse response);
 	JSONObject dorecepitposting(JSONObject object, HttpServletRequest request);
+	JSONObject doreconcilation(JSONObject object, HttpServletRequest request);
+	JSONObject doreceiptreposting(JSONObject object, HttpServletRequest request);
+	JSONObject verifyreceiptnumber(JSONObject object, HttpServletRequest request);
+	JSONObject savereceiptdetailsManaualReceipts(JSONObject object, HttpServletRequest request,
+			HttpServletResponse response);
 }

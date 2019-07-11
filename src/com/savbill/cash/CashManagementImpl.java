@@ -741,6 +741,8 @@ public class CashManagementImpl implements ICashManagement {
 										object.getString("user_id"),
 										request.getServletContext().getRealPath("ReceiptGenerationImpl.java"))) {
 						
+						DBManagerResourceRelease.close(getreceiptCS);
+						DBManagerResourceRelease.close(getreceiptRS);
 				
 					getreceiptCS = dbConnection.prepareCall("{call PKG_CASH.GET_RCPT_DETIALS_FOR_POST(?,?,?,?)}");
 					getreceiptCS.setString(1,object.getString("location_code"));
@@ -790,22 +792,27 @@ public class CashManagementImpl implements ICashManagement {
 					}
 					if(array.isEmpty()){
 						//no tasks for user
-						AckObj.put("status", "fail");
-						AckObj.put("message", "No Records Found");
+						AckObj.put("status", "success");
+						AckObj.put("status1", "fail");
+						AckObj.put("message1", "No Records Found");
 						AckObj.put("receipts_list", array);
 					}else{
 						AckObj.put("status", "success");
+						AckObj.put("status1", "");
 						AckObj.put("receipts_list", array);
 						AckObj.put("message", "Reconcilation Done And"+" Successfully posted records : "+posted_count);
 					}
 				}else {
 					AckObj.put("status", "fail");
+					AckObj.put("status1", "");
 					AckObj.put("message", "No Reconcilation Done !!!");
 					AckObj.put("receipts_list", array);
 				}
 				}else {
-					AckObj.put("status", "fail");
-					AckObj.put("message", "No Records Found");
+					AckObj.put("status", "success");
+					AckObj.put("status1", "fail");
+					AckObj.put("message1", "No Records Found");
+					//AckObj.put("message", "No Records Found");
 				}
 			} catch (Exception e) {
 				AckObj.put("status", "failure");
@@ -899,4 +906,541 @@ public class CashManagementImpl implements ICashManagement {
 		}
 		return true;
 	}
+
+	@Override
+	public JSONObject doreconcilation(JSONObject object, HttpServletRequest request) {
+		// TODO Auto-generated method stub
+JSONObject json_response = new JSONObject();
+		
+		if(!object.isEmpty()) {
+			
+			String location_code = (String) object.get("Location");
+			String user_id = (String) object.get("UserId");
+			String conn_type = (String) object.get("conn_type");
+			String receipt_date = (String) object.get("recon_receipt_date");
+			String receipt_no = (String) object.get("recon_receiptno");
+			String receipt_selected = (String) object.get("recon_selected");
+			String recon_rrno = ((String) object.get("recon_rrno"));
+			
+			
+			if(receipt_selected.equals("rr_no_wise")) {
+				
+				if(CallReconProgram(
+						recon_rrno,
+						receipt_date,
+						location_code,
+						user_id,
+						request.getServletContext().getRealPath("CashManagementImpl.java"))) {
+						
+					json_response.put("status", "success");
+					json_response.put("message", "Reconcilation done successfully for receipt date : "+receipt_date + " , Shop No : "+recon_rrno );
+				}else {
+					json_response.put("status", "error");
+					json_response.put("message", "Reconcialtion Unsuccessful !!!");
+				}
+				
+			}else if(receipt_selected.equals("receipt_date_wise")) {
+				if(CallReconProgram(
+						receipt_date,
+						location_code,
+						user_id,
+						request.getServletContext().getRealPath("ReceiptGenerationImpl.java"))) {
+					
+					json_response.put("status", "success");
+					json_response.put("message", "Reconcilation done successfully for receipt date : "+receipt_date);
+				}else {
+					json_response.put("status", "error");
+					json_response.put("message", "Reconcialtion Unsuccessful !!!");
+				}
+				
+			}else {
+				json_response.put("status", "success");
+				json_response.put("message", "Cannot Do Reconcilation For Receipt No : "+receipt_no+ " receipt date : "+receipt_date + " , Shop No : "+recon_rrno);
+			}
+			
+			
+		}else {
+			
+		}
+		
+		return json_response;
+	}
+	
+	public boolean CallReconProgram(String new_purpose_key,String ReceiptDate,
+			String Location,String UserID, String recon_contextPath) {
+		// TODO Auto-generated method stub
+		
+		CallableStatement cstmt = null;
+		ResultSet rs = null;
+		String db_ip = "";
+		String database = "";
+		String db_user = "";
+		String db_pass = "";
+		String recon_PATH = "";
+		
+		try{
+			
+			try{
+		    	//resouce bundle to read string's specified in properties file
+		    	ResourceBundle propsBundle=ResourceBundle.getBundle("savbilldb");
+		        
+		    	db_ip = propsBundle.getString("IP");
+		        database = propsBundle.getString("DATABASE");
+		        db_user = propsBundle.getString("USER");
+		        db_pass = propsBundle.getString("PASS");
+		        recon_PATH = propsBundle.getString("PATH");
+		       
+		       } 
+		    catch(Exception e){
+		        System.out.println("error" + e);
+		       }	 
+			
+			//Call Reconcilation Program Here...................
+			System.out.println("Call Reconcilation Program Here...........");
+			
+			
+			System.out.println("Recon Program Starts Here...!");
+			
+			//Call The Respective Child Process...!
+			System.out.println("java -jar "+recon_PATH+"Reconcilation.jar "+db_ip+" "+db_user+"/"+db_pass+" "+database+" "+ReceiptDate + " "+new_purpose_key  );
+			
+			
+			Process p = null;
+			try {
+				p = Runtime.getRuntime().exec("java -jar "+recon_PATH+"Reconcilation.jar "+db_ip+" "+db_user+"/"+db_pass+" "+database+" "+ReceiptDate+ " "+new_purpose_key );
+			} catch (IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+			 
+	        final InputStream is = p.getInputStream();
+	        Thread t = new Thread(new Runnable() {
+	            public void run() {
+	                InputStreamReader isr = new InputStreamReader(is);
+	                int ch;
+	                try {
+	                    while ((ch = isr.read()) != -1) {
+	                        System.out.print((char) ch);
+	                    }
+	                } catch (IOException e) {
+	                    e.printStackTrace();
+	                }
+	            }
+	        });
+	        t.start();
+	        try {
+				p.waitFor();
+				t.join();
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+		}catch (Exception e) {
+			// TODO: handle exception
+			e.printStackTrace();
+			return false;
+		}finally{
+			
+		}
+		return true;
+	}
+
+	@Override
+	public JSONObject doreceiptreposting(JSONObject object, HttpServletRequest request) {
+		// TODO Auto-generated method stub
+
+
+		CallableStatement getreceiptCS = null;
+		ResultSet getreceiptRS = null;
+		
+		JSONObject AckObj = new JSONObject();
+		JSONArray array = new JSONArray();
+		
+		try {
+			
+				JSONObject json_resp = new JSONObject();
+				
+				JSONArray receipts_list = (JSONArray) object.getJSONArray("receipts_list");
+				String location_code = (String) object.get("location_code");
+				String user_id = (String) object.get("user_id");
+				String conn_type = (String) object.get("conn_type");
+				
+				//dbConnection = DatabaseImpl.GetLTSQLConnection();
+				if(conn_type.equalsIgnoreCase("LT")){
+					dbConnection = databaseObj.getDatabaseConnection();
+				}else if(conn_type.equals("HT")){
+					dbConnection = databaseObj.getHTDatabaseConnection();
+				}
+				
+				for(int i = 0 ; i < receipts_list.size();i++ ) {
+					
+					JSONObject json = (JSONObject) receipts_list.get(i);
+					
+					String status = (String) json.get("status") ; 
+					String new_purpose_key = location_code+(String) json.get("new_purpose_key") ; 
+					String rcpt_no = (String) json.get("rcpt_no") ; 
+					String countr_no = (String) json.get("countr_no") ; 
+					String rcpt_dt = (String) json.get("rcpt_dt") ; 
+					
+					if(status.equals("2") && new_purpose_key.length()>0) {
+						
+						getreceiptCS = dbConnection.prepareCall("{call NEW_REPOST(?,?,?,?,?,?)}");
+						getreceiptCS.setString(1,rcpt_dt);
+						getreceiptCS.setString(2,rcpt_no);
+						getreceiptCS.setString(3,countr_no);
+						getreceiptCS.setString(4,new_purpose_key);
+						getreceiptCS.setString(5,user_id);
+						getreceiptCS.registerOutParameter(6, OracleTypes.VARCHAR);
+						getreceiptCS.executeUpdate();
+						
+						System.out.println( getreceiptCS.getString(6));
+						
+						String repost_status = getreceiptCS.getString(6);
+						
+						if(repost_status.equals("TRUE")) {
+							
+								if(CallReconProgram(new_purpose_key,rcpt_dt,
+										location_code,
+										user_id,
+										request.getServletContext().getRealPath("CashManagementImpl.java"))) {
+									
+									json_resp.put("status", "success");
+									
+								}else {
+									
+								}
+							
+						}else  {
+							
+							
+						}
+					}
+				}
+				getreceiptCS.close();
+				
+				getreceiptCS = dbConnection.prepareCall("{call PKG_CASH.GET_RCPT_DETIALS_FOR_POST(?,?,?,?)}");
+				getreceiptCS.setString(1,object.getString("location_code"));
+				getreceiptCS.setString(2,object.getString("receipt_date"));
+				getreceiptCS.setString(3,object.getString("counter_number"));
+				getreceiptCS.registerOutParameter(4, OracleTypes.CURSOR);
+				getreceiptCS.executeUpdate();
+				getreceiptRS = (ResultSet) getreceiptCS.getObject(4);
+				
+				while(getreceiptRS.next()){
+					
+					JSONObject json = new JSONObject();
+					
+					json.put("row_num", getreceiptRS.getString("row_num"));
+					json.put("rr_no", getreceiptRS.getString("rr_no"));
+					json.put("rcpt_no", getreceiptRS.getString("rcpt_no"));
+					json.put("rcpt_dt", getreceiptRS.getString("rcpt_dt"));
+					json.put("countr_no", getreceiptRS.getString("countr_no"));
+					json.put("countr_name", getreceiptRS.getString("countr_name"));
+					json.put("pymnt_mode", getreceiptRS.getString("pymnt_mode"));
+					json.put("pymnt_mode_description", getreceiptRS.getString("pymnt_mode_description"));
+					json.put("purpose", getreceiptRS.getString("purpose"));
+					json.put("purpose_descr", getreceiptRS.getString("purpose_descr"));
+					json.put("rcpt_typ", getreceiptRS.getString("rcpt_typ"));
+					json.put("payee_name", getreceiptRS.getString("payee_name"));
+					json.put("cancel_flg", getreceiptRS.getString("cancel_flg"));
+					json.put("remarks", getreceiptRS.getString("remarks"));
+					json.put("posted_sts", getreceiptRS.getString("posted_sts"));
+					json.put("printed_flg", getreceiptRS.getString("printed_flg"));
+					json.put("rrno_applno_flg",getreceiptRS.getString("rrno_applno_flg"));
+					json.put("chq_dd_no",getreceiptRS.getString("chq_dd_no"));
+					json.put("chq_dd_dt",getreceiptRS.getString("chq_dd_dt"));
+					json.put("drawn_bank", getreceiptRS.getString("drawn_bank"));
+					json.put("less_amt_realised", getreceiptRS.getString("less_amt_realised"));
+					json.put("less_amt_posted_sts", getreceiptRS.getString("less_amt_posted_sts"));
+					json.put("userid", getreceiptRS.getString("userid"));
+					json.put("tmpstp", getreceiptRS.getString("tmpstp"));
+					json.put("ldgr_no", getreceiptRS.getString("ldgr_no"));
+					json.put("folio_no",getreceiptRS.getString("folio_no"));
+					json.put("status",getreceiptRS.getString("status"));
+					json.put("description",getreceiptRS.getString("description"));
+					json.put("amt_paid", getreceiptRS.getString("amt_paid"));
+					json.put("purpose_key", getreceiptRS.getString("purpose_key"));
+					json.put("new_purpose_key", getreceiptRS.getString("new_purpose_key"));
+					
+					array.add(json);
+				}
+				/*if(array.isEmpty()){
+					//no tasks for user
+					AckObj.put("status", "fail");
+					AckObj.put("message", "No Records Found");
+					AckObj.put("receipts_list", array);
+				}else{
+					AckObj.put("status", "success");
+					AckObj.put("receipts_list", array);
+					AckObj.put("message", "Reposting Done Successfully !!!");
+				}*/
+				if(!json_resp.isEmpty()) {
+					AckObj.put("status", "success");
+					AckObj.put("receipts_list", array);
+					AckObj.put("message", "Reposting Done Successfully !!!");
+				}else {
+					AckObj.put("status", "fail");
+					AckObj.put("message", "Failed to do reposting.");
+					AckObj.put("receipts_list", array);
+				}
+				
+			} catch (Exception e) {
+				AckObj.put("status", "failure");
+				e.printStackTrace();
+				AckObj.put("message", "database not connected");
+			}finally{
+				
+				DBManagerResourceRelease.close(getreceiptCS);
+				DBManagerResourceRelease.close(getreceiptRS);
+			}
+		return AckObj;
+	}
+
+	@Override
+	public JSONObject verifyreceiptnumber(JSONObject object, HttpServletRequest request) {
+		// TODO Auto-generated method stub
+
+
+		PreparedStatement ps = null;
+		ResultSet rs = null;
+		JSONObject jsonResponse = new JSONObject();
+		
+		
+		try {
+			
+			if(!object.isEmpty()){
+				
+				String receiptno  = (String)object.get("receiptno");
+				String receiptdate  = (String)object.get("receiptdate");
+				String counterno  = (String)object.get("counterno");
+				String conn_type = (String) object.get("conn_type");
+				
+				if(conn_type.equalsIgnoreCase("LT")){
+					dbConnection = databaseObj.getDatabaseConnection();
+				}else if(conn_type.equals("HT")){
+					dbConnection = databaseObj.getHTDatabaseConnection();
+				}
+				
+				if(dbConnection != null){
+					ps = dbConnection.prepareStatement("SELECT COUNT(*) CNT FROM INITIAL_RCPT_PYMNT WHERE IRP_RCPT_NO ='"+receiptno+"'AND  IRP_RCPT_DT= TO_DATE('"+receiptdate+"','DD/MM/YYYY') AND  IRP_CASH_COUNTR_NO = '"+counterno+"'") ; 
+					
+					rs = ps.executeQuery();
+					if (rs.next()) {
+						jsonResponse.put("receipts_count", rs.getString("CNT"));
+						jsonResponse.put("status", "success");
+					}else {
+						jsonResponse.put("status", "error");
+						jsonResponse.put("receipts_count", "-1");
+					}
+				}else {
+					jsonResponse.put("status", "error");
+					jsonResponse.put("message", "Database Query / Runtime Error .");
+				}
+			
+			}else{
+				jsonResponse.put("status", "error");
+				jsonResponse.put("message", "Invalid Inputs / No Agent Detials");
+			}
+
+		} catch (SQLException e) {
+			System.out.println("Exception thrown " + e);
+			jsonResponse.put("status", "error");
+			jsonResponse.put("message", "Database Query / Runtime Error .");
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			jsonResponse.put("status", "error");
+			jsonResponse.put("message", " Database Query / Runtime Error.");
+		} finally {
+			DBManagerResourceRelease.close(rs);
+			DBManagerResourceRelease.close(ps);
+		}
+		
+		return jsonResponse;
+	}
+
+	@Override
+	public JSONObject savereceiptdetailsManaualReceipts(JSONObject object, HttpServletRequest request,
+			HttpServletResponse response) {
+		// TODO Auto-generated method stub
+		CallableStatement accountsCS = null;
+		JSONObject jsonResponse  = new JSONObject();
+		JSONArray jsonList = new JSONArray();
+		PreparedStatement ps	=	null;
+		ResultSet rs			=	null;
+		boolean continue_execution = false;
+		String TRANSACTION_ID = "";
+		
+		try {
+			
+			
+			String location_code = (String) object.get("location");
+			String userid = (String) object.get("user_id");
+			String conn_type = (String) object.get("conn_type");
+			
+			if(conn_type.equalsIgnoreCase("LT")){
+				dbConnection = databaseObj.getDatabaseConnection();
+			}else if(conn_type.equals("HT")){
+				dbConnection = databaseObj.getHTDatabaseConnection();
+			}
+			
+			if(!object.isEmpty()){
+				
+					
+				
+				if(dbConnection != null){
+					
+					String transaction_fetch = "SELECT TO_CHAR(LPAD(NVL(MAX(TO_NUMBER(IRPT_TRANSACTION_ID)),0)+1,10,'0'))  TRANS_ID FROM IRP_TRANSACTIONS";
+					
+					ps = dbConnection.prepareStatement(transaction_fetch);
+					rs = ps.executeQuery();
+					
+					if(rs.next()) {
+						TRANSACTION_ID = rs.getString("TRANS_ID");
+					}
+					
+					rs.close();
+					
+					if(object.getString("payment_mode").equals("CHQ")) {
+						
+						accountsCS=dbConnection.prepareCall("{call PKG_CASH.INSERT_CHEQUE_MASTER_HRT(?,?,?,?,?,?,?,?)}");
+						
+						accountsCS.registerOutParameter(1, OracleTypes.CURSOR);
+						accountsCS.setString(2, ConvertIFNullToString(object.getString("cheque_number")));
+						accountsCS.setString(3, ConvertIFNullToString(object.getString("cheque_date")));
+						accountsCS.setString(4, ConvertIFNullToString(object.getString("drawee_bank")));
+						accountsCS.setString(5, ConvertIFNullToString(object.getString("receipt_date")));
+						accountsCS.setString(6, ConvertIFNullToString(object.getString("payment_mode")));
+						accountsCS.setString(7, ConvertIFNullToString(object.getString("cheque_amount")));
+						accountsCS.setString(8, ConvertIFNullToString(object.getString("user_id")));
+						
+						accountsCS.executeUpdate();
+						rs = (ResultSet) accountsCS.getObject(1);
+						
+						if(rs.next()){
+							
+							String resp = rs.getString("RESP");
+							
+							System.out.println("resp : "+resp);
+							
+							if(resp.equalsIgnoreCase("SUCCESS")){
+								continue_execution = true;
+								System.out.println("111111111continue_execution : "+continue_execution);
+							}else {
+								continue_execution = false;
+								System.out.println("22222222222continue_execution : "+continue_execution);
+							}
+						}
+						
+					}else {
+						
+						continue_execution = true;
+					}
+					
+					System.out.println("continue_execution : "+continue_execution);
+					if(continue_execution) {
+						
+						JSONArray receipt_details_Array = object.getJSONArray("receipt_details");
+						
+						if(!receipt_details_Array.isEmpty()){
+							
+							accountsCS=dbConnection.prepareCall("{call PKG_CASH.INSERT_RCPT_DETIALS_HRT(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)}");
+							
+							for(int i = 0 ; i<receipt_details_Array.size();i++){
+								
+								JSONObject receipt = receipt_details_Array.getJSONObject(i);
+								
+								accountsCS.registerOutParameter(1, OracleTypes.CURSOR);
+								accountsCS.setString(2, TRANSACTION_ID);
+								accountsCS.setString(3, ConvertIFNullToString(receipt.getString("manualreceiptnumber")));
+								accountsCS.setString(4, ConvertIFNullToString(object.getString("receipt_date")));
+								accountsCS.setString(5, ConvertIFNullToString(object.getString("cash_counter")));
+								accountsCS.setString(6, ConvertIFNullToString(object.getString("payment_purpose")));
+								accountsCS.setString(7, ConvertIFNullToString(receipt.getString("rrno")));
+								accountsCS.setString(8, ConvertIFNullToString(object.getString("payment_mode")));
+								accountsCS.setString(9, ConvertIFNullToString(receipt.getString("amount")));
+								accountsCS.setString(10, ConvertIFNullToString(receipt.getString("name")));
+								accountsCS.setString(11, ConvertIFNullToString(object.getString("remarks")));
+								accountsCS.setString(12, ConvertIFNullToString(object.getString("cheque_number")));
+								accountsCS.setString(13, ConvertIFNullToString(object.getString("cheque_date")));
+								accountsCS.setString(14, ConvertIFNullToString(object.getString("drawee_bank")));
+								accountsCS.setString(15, ConvertIFNullToString(object.getString("user_id")));
+								
+								System.out.println(accountsCS);
+								
+								accountsCS.executeUpdate();
+								
+								
+								rs = (ResultSet) accountsCS.getObject(1);
+								
+								System.out.println("outside...................");
+								System.out.println("rs : "+rs);
+								
+								if(rs.next()){
+									
+									JSONObject json_response = new JSONObject();
+									
+									String resp = rs.getString("RESP");
+									
+									System.out.println("resp : "+resp);
+									
+									if(resp.equalsIgnoreCase("success")){
+										
+										json_response.put("status", "success");
+										json_response.put("message", "Receipt Generated Successfully");
+										
+									}else if(resp.indexOf("fail") > 0){
+										json_response.put("status", "error");
+										json_response.put("message", "Receipt not generated");
+									}
+									jsonList.add(json_response);
+								}
+							}
+							if(!jsonList.isEmpty()){
+								jsonResponse.put("status", "success");
+								jsonResponse.put("message", "Receipt Generated Successfully");
+								
+								JSONObject temp_object = new JSONObject();
+								temp_object.put("TRANSACTION_ID", TRANSACTION_ID);
+								temp_object.put("filename", "APMC_RCPT");
+								temp_object.put("exporttype", "PDF");
+								temp_object.put("report_title", "Receipt Print");
+
+								//JSONObject fileload_json = printObj.downloadbilltolocalpath(temp_object, request, response);
+								//System.out.println(fileload_json);
+								
+								//jsonResponse.put("filepath", (String)fileload_json.get("filepath"));
+								
+							}else{
+								jsonResponse.put("status", "error");
+								jsonResponse.put("message", "Receipt not generated !");
+							}
+					}
+					
+					}else{
+						jsonResponse.put("status", "error");
+						jsonResponse.put("message", "No Receipts Found To Generate !");
+					}
+				}	
+			}else{	
+				jsonResponse.put("status", "error");
+				jsonResponse.put("message", "Invalid Input !");
+			}
+		} catch (SQLException e) {
+			System.out.println(e.getMessage());
+			jsonResponse.put("status", "fail");
+			jsonResponse.put("message", "Error Occured In Receipt Generation .");
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}finally 
+		{
+			DBManagerResourceRelease.close(ps);
+			DBManagerResourceRelease.close(rs);
+		}
+		return jsonResponse;
+	}
+	
+	
 }

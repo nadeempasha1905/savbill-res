@@ -2151,6 +2151,47 @@ public class RouterServer {
 		return cashObj.dorecepitposting(object,request);
 	}
 	
+	@POST
+	@Path("/doreceiptreposting")
+	@Consumes({MediaType.APPLICATION_JSON})
+	@Produces({MediaType.APPLICATION_JSON})
+	public JSONObject doreceiptreposting(final JSONObject object,@Context HttpServletRequest request){
+		
+		return cashObj.doreceiptreposting(object,request);
+	}
+	
+	@POST
+	@Path("/doreconcilation")
+	@Consumes({MediaType.APPLICATION_JSON})
+	@Produces({MediaType.APPLICATION_JSON})
+	public JSONObject doreconcilation(final JSONObject object,@Context HttpServletRequest request){
+		
+		return cashObj.doreconcilation(object,request);
+	}
+	
+	
+	@POST
+	@Path("/verifyreceiptnumber")
+	@Consumes({MediaType.APPLICATION_JSON})
+	@Produces({MediaType.APPLICATION_JSON})
+	public JSONObject verifyreceiptnumber(final JSONObject object, @Context HttpServletRequest request){
+		
+		System.out.println(object);
+		return cashObj.verifyreceiptnumber(object,request);
+	}
+	
+	@POST
+	@Path("/savereceiptdetailsmanualreceipts")
+	@Consumes({MediaType.APPLICATION_JSON})
+	@Produces({MediaType.APPLICATION_JSON})
+	public JSONObject savereceiptdetailsmanualreceipts(final JSONObject object, @Context HttpServletRequest request,@Context HttpServletResponse response){
+		
+		System.out.println(object);
+		return cashObj.savereceiptdetailsManaualReceipts(object,request,response);
+		
+	}
+	
+	
 	
 	////////////////
 	
