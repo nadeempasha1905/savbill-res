@@ -2103,6 +2103,27 @@ public class RouterServer {
 		
 	}
 	
+	
+	@POST
+	@Path("/getdcb")
+	@Consumes({MediaType.APPLICATION_JSON})
+	@Produces({MediaType.APPLICATION_JSON})
+	public JSONObject getdcb(final JSONObject object, @Context HttpServletRequest request, @Context HttpServletResponse response){
+
+		return  reportObj.getdcb(request, response,object);
+		
+	}
+	
+	@POST
+	@Path("/getsbdreports")
+	@Consumes({MediaType.APPLICATION_JSON})
+	@Produces({MediaType.APPLICATION_JSON})
+	public JSONObject getsbdreports(final JSONObject object, @Context HttpServletRequest request, @Context HttpServletResponse response){
+
+		return  reportObj.getsbdreports(request, response,object);
+		
+	}
+	
 	///////////////////////////
 	
 	//Receipt Generation

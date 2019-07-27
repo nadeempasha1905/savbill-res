@@ -26,4 +26,8 @@ public interface IReportGeneration {
 
 	JSONObject maindashboard(HttpServletRequest request, HttpServletResponse response, JSONObject object);
 
+	JSONObject getdcb(HttpServletRequest request, HttpServletResponse response, JSONObject object);
+
+	JSONObject getsbdreports(HttpServletRequest request, HttpServletResponse response, JSONObject object);
+
 }
