@@ -689,8 +689,8 @@ public class UserManagementImpl implements IUserManagement{
 				ackobj.put("user_db_setup_description", userRS.getString("user_db_setup_description"));
 				ackobj.put("user_status", userRS.getString("user_status"));
 				ackobj.put("user_status_description", userRS.getString("user_status_description"));
-				ackobj.put("usrid", userRS.getString("usrid"));
-				ackobj.put("user_tmpstp", userRS.getString("user_tmpstp"));
+				ackobj.put("userid", userRS.getString("userid"));
+				ackobj.put("tmpstp", userRS.getString("tmpstp"));
 
 				array.add(ackobj);
 				

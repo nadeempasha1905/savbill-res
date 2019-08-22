@@ -30,4 +30,8 @@ public interface IReportGeneration {
 
 	JSONObject getsbdreports(HttpServletRequest request, HttpServletResponse response, JSONObject object);
 
+	JSONObject generateCollectionEfficiency(HttpServletRequest request, HttpServletResponse response, JSONObject object);
+
+	JSONObject getPaymentPurposewiseReport(HttpServletRequest request, HttpServletResponse response, JSONObject object);
+
 }

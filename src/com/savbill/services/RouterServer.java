@@ -2061,6 +2061,26 @@ public class RouterServer {
 		
 	}
 	
+	@POST
+	@Path("/generateCollectionEfficiency")
+	@Consumes({MediaType.APPLICATION_JSON})
+	@Produces({MediaType.APPLICATION_JSON})
+	public JSONObject generateCollectionEfficiency(final JSONObject object, @Context HttpServletRequest request, @Context HttpServletResponse response){
+
+		return  reportObj.generateCollectionEfficiency(request, response,object);
+		
+	}
+	
+	@POST
+	@Path("/getPaymentPurposewiseReport")
+	@Consumes({MediaType.APPLICATION_JSON})
+	@Produces({MediaType.APPLICATION_JSON})
+	public JSONObject getPaymentPurposewiseReport(final JSONObject object, @Context HttpServletRequest request, @Context HttpServletResponse response){
+
+		return  reportObj.getPaymentPurposewiseReport(request, response,object);
+		
+	}
+	
 	@GET
 	@Path("/downloadreport")
 	/*@Consumes({MediaType.APPLICATION_JSON})*/
