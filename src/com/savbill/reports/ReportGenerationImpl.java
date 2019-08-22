@@ -169,9 +169,15 @@ public class ReportGenerationImpl implements IReportGeneration {
 		String tariffcodes = request.getParameter("tariffcodes");
 		String fromdate = request.getParameter("fromdate");
 		String todate = request.getParameter("todate");
+		String month_year = request.getParameter("month_year");
 		String header = request.getParameter("header");
 		String username = request.getParameter("username");
 		String companyname = "Mescom Electricity Company Limited";
+		
+		String station_code = request.getParameter("station_code");
+		String feeder_code = request.getParameter("feeder_code");
+		String transformer_code = request.getParameter("transformer_code");
+		String gps = request.getParameter("gps");
 		
 		try {
 		if (conn_type.equalsIgnoreCase("LT")) {
@@ -190,6 +196,9 @@ public class ReportGenerationImpl implements IReportGeneration {
 			if(report_type.equals("BILLING_EFF")){
 				fileName = "SAVBillingEfficiencyReport";
 				report_title = "Billing Efficiency Report";
+			}else if(report_type.equals("MAIN_DCB")){
+				fileName = "DCBReport";
+				report_title = "DCB for the month of "+month_year;
 			}
 
 	        try {
@@ -214,16 +223,23 @@ public class ReportGenerationImpl implements IReportGeneration {
 	            
 	            parameterMap.put("REPORT_TITLE", report_title);
 	            parameterMap.put("REPORT_TYPE", report_type);
+	            parameterMap.put("report_type", report_type);
 	            parameterMap.put("locationcode", selected_location);
 	            parameterMap.put("subdivision", selected_location);
 	            parameterMap.put("fromDate", fromdate);
 	            parameterMap.put("toDate", todate);
+	            parameterMap.put("month_year", month_year);
 	            parameterMap.put("username", username);
 	            parameterMap.put("reporttitle", report_title);
 	            parameterMap.put("companyname", companyname);
 	            parameterMap.put("grouptype", report_wise);
 	            parameterMap.put("mrcode", metercode);
 	            parameterMap.put("tariffs", tariffcodes);
+	            
+	            parameterMap.put("station_code", station_code);
+	            parameterMap.put("feeder_code", feeder_code);
+	            parameterMap.put("transformer_code", transformer_code);
+	            parameterMap.put("gps", gps);
 	            
 	            System.out.println(parameterMap);
 	            
@@ -280,9 +296,6 @@ public class ReportGenerationImpl implements IReportGeneration {
 				while ((n = fin.read(buffer)) != -1) {
 				outStream.write(buffer, 0, n);
 				}
-				
-				
-				
 				
 
 				outStream.flush();
@@ -525,6 +538,342 @@ public class ReportGenerationImpl implements IReportGeneration {
 		}
 
 		return obj;
+	}
+
+	@Override
+	public JSONObject getdcb(HttpServletRequest request, HttpServletResponse response, JSONObject object) {
+		// TODO Auto-generated method stub
+		CallableStatement accountsCS = null;
+		ResultSet accountsRS = null;
+		JSONArray array = new JSONArray();
+		JSONObject obj = new JSONObject();
+
+		String conn_type = object.getString("conn_type");
+		String report_type = object.getString("report_type");
+		String Location_Code = object.getString("selected_location");
+		String month_year = object.getString("month_year");
+		String tariffcodes = object.getString("tariffcodes");
+		String station_code = object.getString("station_code");
+		String feeder_code = object.getString("feeder_code");
+		String transformer_code = object.getString("transformer_code");
+		String metercode = object.getString("metercode");
+		String gps = object.getString("gps");
+		Boolean header = object.getBoolean("header");
+		
+		System.out.println(object);
+
+		try {
+
+			if (conn_type.equalsIgnoreCase("LT")) {
+
+				dbConnection = databaseObj.getDatabaseConnection();
+
+			} else if (conn_type.equals("HT")) {
+				dbConnection = databaseObj.getHTDatabaseConnection();
+			}
+
+			//accountsCS = dbConnection.prepareCall(DBQueries.REPORT_GET_BILLING_EFFICIENCY);
+			accountsCS = dbConnection.prepareCall("{ call  PKG_DCB_REPORTS.GET_DCB (?,'"+report_type+"','"+Location_Code+"','"+month_year+"',"
+					                                                               + "'"+tariffcodes+"','"+station_code+"','"+feeder_code+"',"
+					                                                               + "'"+transformer_code+"','"+metercode+"','"+gps+"',"+header+")}");
+			accountsCS.registerOutParameter(1, OracleTypes.CURSOR);
+			
+			accountsCS.executeUpdate();
+			accountsRS = (ResultSet) accountsCS.getObject(1);
+			System.out.println(accountsRS);
+			while (accountsRS.next()) {
+				JSONObject ackobj = new JSONObject();
+
+				ackobj.put("row_no", accountsRS.getString("row_no"));
+				ackobj.put("trfgrp", accountsRS.getString("trfgrp"));
+				ackobj.put("trforder", accountsRS.getString("trforder"));
+				ackobj.put("acccd_dmd", accountsRS.getString("acccd_dmd"));
+				ackobj.put("acccd_bal", accountsRS.getString("acccd_bal"));
+				ackobj.put("vc", accountsRS.getString("vc"));
+				ackobj.put("trf_desc", accountsRS.getString("trf_desc"));
+				ackobj.put("trf", accountsRS.getString("trf"));
+				ackobj.put("kw", accountsRS.getString("kw"));
+				ackobj.put("hp", accountsRS.getString("hp"));
+				ackobj.put("kva", accountsRS.getString("kva"));
+				ackobj.put("tot_insts", accountsRS.getString("tot_insts"));
+				ackobj.put("active_insts", accountsRS.getString("active_insts"));
+				ackobj.put("tobe_billed", accountsRS.getString("tobe_billed"));
+				ackobj.put("billed_insts", accountsRS.getString("billed_insts"));
+				ackobj.put("mtr_units", accountsRS.getString("mtr_units"));
+				ackobj.put("assd_units", accountsRS.getString("assd_units"));
+				ackobj.put("wheeled_units", accountsRS.getString("wheeled_units"));
+				ackobj.put("consmptot", accountsRS.getString("consmptot"));
+				ackobj.put("rev_ob", accountsRS.getString("rev_ob"));
+				ackobj.put("int_ob", accountsRS.getString("int_ob"));
+				ackobj.put("tax_ob", accountsRS.getString("tax_ob"));
+				ackobj.put("obtot", accountsRS.getString("obtot"));
+				ackobj.put("rev_dmd", accountsRS.getString("rev_dmd"));
+				ackobj.put("int_dmd", accountsRS.getString("int_dmd"));
+				ackobj.put("tax_dmd", accountsRS.getString("tax_dmd"));
+				ackobj.put("dmdtot", accountsRS.getString("dmdtot"));
+				ackobj.put("obdmdrev", accountsRS.getString("obdmdrev"));
+				ackobj.put("obdmdint", accountsRS.getString("obdmdint"));
+				ackobj.put("obdmdtax", accountsRS.getString("obdmdtax"));
+				ackobj.put("obdmdtot", accountsRS.getString("obdmdtot"));
+				ackobj.put("ccrev_coll", accountsRS.getString("ccrev_coll"));
+				ackobj.put("adjrev_coll", accountsRS.getString("adjrev_coll"));
+				ackobj.put("collrevtot", accountsRS.getString("collrevtot"));
+				ackobj.put("ccint_coll", accountsRS.getString("ccint_coll"));
+				ackobj.put("adjint_coll", accountsRS.getString("adjint_coll"));
+				ackobj.put("collinttot", accountsRS.getString("collinttot"));
+				ackobj.put("cctax_coll", accountsRS.getString("cctax_coll"));
+				ackobj.put("adjtax_coll", accountsRS.getString("adjtax_coll"));
+				ackobj.put("colltaxtot", accountsRS.getString("colltaxtot"));
+				ackobj.put("colltot", accountsRS.getString("colltot"));
+				ackobj.put("rev_cb", accountsRS.getString("rev_cb"));
+				ackobj.put("int_cb", accountsRS.getString("int_cb"));
+				ackobj.put("tax_cb", accountsRS.getString("tax_cb"));
+				ackobj.put("cb_total", accountsRS.getString("cb_total"));
+				array.add(ackobj);
+
+			}
+			if (array.isEmpty()) {
+				// no tasks for user
+				obj.put("status", "success");
+				obj.put("message", "No Records Found !!!");
+			} else {
+				obj.put("status", "success");
+				obj.put("message", "DCB Data Retrieved !!!");
+				obj.put("DCBDATA", array);
+			}
+
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			obj.put("status", "fail");
+			e.printStackTrace();
+			obj.put("message", "database not connected");
+		}
+
+		return obj;
+	}
+
+	@Override
+	public JSONObject getsbdreports(HttpServletRequest request, HttpServletResponse response, JSONObject object) {
+
+		// TODO Auto-generated method stub
+		CallableStatement accountsCS = null;
+		ResultSet accountsRS = null;
+		JSONArray array = new JSONArray();
+		JSONObject obj = new JSONObject();
+
+		String conn_type = object.getString("conn_type");
+		String report_type = object.getString("report_type");
+		String Location_Code = object.getString("selected_location");
+		String metercode = object.getString("metercode");
+		String tariffcodes = object.getString("tariffcodes");
+		String fromdate = object.getString("fromdate");
+		String todate = object.getString("todate");
+		Boolean header = object.getBoolean("header");
+		
+		System.out.println(object);
+
+		try {
+
+			if (conn_type.equalsIgnoreCase("LT")) {
+
+				dbConnection = databaseObj.getDatabaseConnection();
+
+			} else if (conn_type.equals("HT")) {
+				dbConnection = databaseObj.getHTDatabaseConnection();
+			}
+
+			//accountsCS = dbConnection.prepareCall(DBQueries.REPORT_GET_BILLING_EFFICIENCY);
+			accountsCS = dbConnection.prepareCall("{ call  GET_SBD_BILLING_EFFICIENCY (?,'"+report_type+"','"+Location_Code+"','"+metercode+"',"
+					                                                               + "'"+tariffcodes+"','"+fromdate+"','"+todate+"',"+header+")}");
+			accountsCS.registerOutParameter(1, OracleTypes.CURSOR);
+			
+			accountsCS.executeUpdate();
+			accountsRS = (ResultSet) accountsCS.getObject(1);
+			System.out.println(accountsRS);
+			while (accountsRS.next()) {
+				JSONObject ackobj = new JSONObject();
+
+				ackobj.put("row_no", accountsRS.getString("row_no"));
+				ackobj.put("mrcode", accountsRS.getString("mrcode"));
+				ackobj.put("trf", accountsRS.getString("trf"));
+				ackobj.put("tobebilled", accountsRS.getString("tobebilled"));
+				ackobj.put("billed", accountsRS.getString("billed"));
+				ackobj.put("notbilled", accountsRS.getString("notbilled"));
+				ackobj.put("bill_eff", accountsRS.getString("bill_eff"));
+				ackobj.put("nor", accountsRS.getString("nor"));
+				ackobj.put("dl", accountsRS.getString("dl"));
+				ackobj.put("mnr", accountsRS.getString("mnr"));
+				ackobj.put("vacant", accountsRS.getString("vacant"));
+				ackobj.put("dc", accountsRS.getString("dc"));
+
+				array.add(ackobj);
+
+			}
+			if (array.isEmpty()) {
+				// no tasks for user
+				obj.put("status", "success");
+				obj.put("message", "No Records Found !!!");
+			} else {
+				obj.put("status", "success");
+				obj.put("message", "SBD Data Retrieved !!!");
+				obj.put("SBDDATA", array);
+			}
+
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			obj.put("status", "fail");
+			e.printStackTrace();
+			obj.put("message", "database not connected");
+		}
+
+		return obj;
+	
+	}
+
+	@Override
+	public JSONObject generateCollectionEfficiency(HttpServletRequest request, HttpServletResponse response,
+			JSONObject object) {
+
+		// TODO Auto-generated method stub
+		CallableStatement accountsCS = null;
+		ResultSet accountsRS = null;
+		JSONArray array = new JSONArray();
+		JSONObject obj = new JSONObject();
+
+		String conn_type = object.getString("conn_type");
+		String report_type = object.getString("report_type");
+		String Location_Code = object.getString("selected_location");
+		String metercode = object.getString("metercode");
+		String tariffcodes = object.getString("tariffcodes");
+		String fromdate = object.getString("fromdate");
+		String todate = object.getString("todate");
+		Boolean header = object.getBoolean("header");
+		
+		System.out.println(object);
+
+		try {
+
+			if (conn_type.equalsIgnoreCase("LT")) {
+
+				dbConnection = databaseObj.getDatabaseConnection();
+
+			} else if (conn_type.equals("HT")) {
+				dbConnection = databaseObj.getHTDatabaseConnection();
+			}
+
+			accountsCS = dbConnection.prepareCall("{ call GET_COLLECTION_EFFICIENCY (?,'"+report_type+"','"+Location_Code+"','"+metercode+"',"
+					                                                               + "'"+tariffcodes+"','"+fromdate+"','"+todate+"',"+header+")}");
+			accountsCS.registerOutParameter(1, OracleTypes.CURSOR);
+			
+			accountsCS.executeUpdate();
+			accountsRS = (ResultSet) accountsCS.getObject(1);
+			System.out.println(accountsRS);
+			while (accountsRS.next()) {
+				JSONObject ackobj = new JSONObject();
+
+				ackobj.put("row_no", accountsRS.getString("row_no"));
+				ackobj.put("mrcode", accountsRS.getString("mrcode"));
+				ackobj.put("trf", accountsRS.getString("trf"));
+				ackobj.put("consmp", accountsRS.getString("consmp"));
+				ackobj.put("dmd", accountsRS.getString("dmd"));
+				ackobj.put("col", accountsRS.getString("col"));
+				ackobj.put("crdt", accountsRS.getString("crdt"));
+				ackobj.put("col_eff", accountsRS.getString("col_eff"));
+				ackobj.put("dmdarr", accountsRS.getString("dmdarr"));
+				ackobj.put("colarr", accountsRS.getString("colarr"));
+
+				array.add(ackobj);
+
+			}
+			if (array.isEmpty()) {
+				// no tasks for user
+				obj.put("status", "success");
+				obj.put("message", "No Records Found !!!");
+			} else {
+				obj.put("status", "success");
+				obj.put("message", "Collection Efficiency Data Retrieved !!!");
+				obj.put("COLLECTION_EFFICIENCY", array);
+			}
+
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			obj.put("status", "fail");
+			e.printStackTrace();
+			obj.put("message", "database not connected");
+		}
+
+		return obj;
+	
+	}
+
+	@Override
+	public JSONObject getPaymentPurposewiseReport(HttpServletRequest request, HttpServletResponse response,
+			JSONObject object) {
+
+		// TODO Auto-generated method stub
+		CallableStatement accountsCS = null;
+		ResultSet accountsRS = null;
+		JSONArray array = new JSONArray();
+		JSONObject obj = new JSONObject();
+
+		String conn_type = object.getString("conn_type");
+		String Location_Code = object.getString("selected_location");
+		String cashcounternumber = object.getString("cashcounternumber");
+		String fromdate = object.getString("fromdate");
+		String todate = object.getString("todate"); 
+		Boolean header = object.getBoolean("header");
+		
+		System.out.println(object);
+
+		try {
+
+			if (conn_type.equalsIgnoreCase("LT")) {
+
+				dbConnection = databaseObj.getDatabaseConnection();
+
+			} else if (conn_type.equals("HT")) {
+				dbConnection = databaseObj.getHTDatabaseConnection();
+			}
+
+			accountsCS = dbConnection.prepareCall("{ call PKG_CASH.GET_PURPOSEWISE_REPORTS (?,'"+Location_Code+"','"+cashcounternumber+"',"
+					                                                                        + "'"+fromdate+"','"+todate+"',"+header+")}");
+			accountsCS.registerOutParameter(1, OracleTypes.CURSOR);
+			
+			System.out.println(accountsCS);
+			
+			accountsCS.executeUpdate();
+			accountsRS = (ResultSet) accountsCS.getObject(1);
+			System.out.println(accountsRS);
+			while (accountsRS.next()) {
+				JSONObject ackobj = new JSONObject();
+
+				ackobj.put("row_no", accountsRS.getString("row_no"));
+				ackobj.put("account_code", accountsRS.getString("account_code"));
+				ackobj.put("pymnt_purpose", accountsRS.getString("pymnt_purpose"));
+				ackobj.put("amount", accountsRS.getString("amount"));
+
+				array.add(ackobj);
+
+			}
+			if (array.isEmpty()) {
+				// no tasks for user
+				obj.put("status", "success");
+				obj.put("message", "No Records Found !!!");
+			} else {
+				obj.put("status", "success");
+				obj.put("message", "Payment Purpose Wise Data Retrieved !!!");
+				obj.put("PURPOSEWISE", array);
+			}
+
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			obj.put("status", "fail");
+			e.printStackTrace();
+			obj.put("message", "database not connected");
+		}
+
+		return obj;
+	
 	}
 
 }

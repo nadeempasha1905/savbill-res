@@ -2061,6 +2061,26 @@ public class RouterServer {
 		
 	}
 	
+	@POST
+	@Path("/generateCollectionEfficiency")
+	@Consumes({MediaType.APPLICATION_JSON})
+	@Produces({MediaType.APPLICATION_JSON})
+	public JSONObject generateCollectionEfficiency(final JSONObject object, @Context HttpServletRequest request, @Context HttpServletResponse response){
+
+		return  reportObj.generateCollectionEfficiency(request, response,object);
+		
+	}
+	
+	@POST
+	@Path("/getPaymentPurposewiseReport")
+	@Consumes({MediaType.APPLICATION_JSON})
+	@Produces({MediaType.APPLICATION_JSON})
+	public JSONObject getPaymentPurposewiseReport(final JSONObject object, @Context HttpServletRequest request, @Context HttpServletResponse response){
+
+		return  reportObj.getPaymentPurposewiseReport(request, response,object);
+		
+	}
+	
 	@GET
 	@Path("/downloadreport")
 	/*@Consumes({MediaType.APPLICATION_JSON})*/
@@ -2100,6 +2120,27 @@ public class RouterServer {
 	public JSONObject getfinancialyears(final JSONObject object, @Context HttpServletRequest request, @Context HttpServletResponse response){
 
 		return  reportObj.getfinancialyears(request, response,object);
+		
+	}
+	
+	
+	@POST
+	@Path("/getdcb")
+	@Consumes({MediaType.APPLICATION_JSON})
+	@Produces({MediaType.APPLICATION_JSON})
+	public JSONObject getdcb(final JSONObject object, @Context HttpServletRequest request, @Context HttpServletResponse response){
+
+		return  reportObj.getdcb(request, response,object);
+		
+	}
+	
+	@POST
+	@Path("/getsbdreports")
+	@Consumes({MediaType.APPLICATION_JSON})
+	@Produces({MediaType.APPLICATION_JSON})
+	public JSONObject getsbdreports(final JSONObject object, @Context HttpServletRequest request, @Context HttpServletResponse response){
+
+		return  reportObj.getsbdreports(request, response,object);
 		
 	}
 	
