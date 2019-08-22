@@ -20,4 +20,5 @@ public interface ICashManagement {
 	JSONObject verifyreceiptnumber(JSONObject object, HttpServletRequest request);
 	JSONObject savereceiptdetailsManaualReceipts(JSONObject object, HttpServletRequest request,
 			HttpServletResponse response);
+	JSONObject getfirstreceiptnumber(JSONObject object, HttpServletRequest request);
 }

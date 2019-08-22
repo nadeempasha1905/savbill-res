@@ -1203,7 +1203,9 @@ JSONObject json_response = new JSONObject();
 
 
 		PreparedStatement ps = null;
+		PreparedStatement ps1 = null;
 		ResultSet rs = null;
+		ResultSet rs1 = null;
 		JSONObject jsonResponse = new JSONObject();
 		
 		
@@ -1223,15 +1225,36 @@ JSONObject json_response = new JSONObject();
 				}
 				
 				if(dbConnection != null){
-					ps = dbConnection.prepareStatement("SELECT COUNT(*) CNT FROM INITIAL_RCPT_PYMNT WHERE IRP_RCPT_NO ='"+receiptno+"'AND  IRP_RCPT_DT= TO_DATE('"+receiptdate+"','DD/MM/YYYY') AND  IRP_CASH_COUNTR_NO = '"+counterno+"'") ; 
+					ps = dbConnection.prepareStatement("SELECT COUNT(*) CNT FROM INITIAL_RCPT_PYMNT WHERE IRP_RCPT_NO ='"+receiptno+"'AND "
+							+ " IRP_RCPT_DT= TO_DATE('"+receiptdate+"','DD/MM/YYYY') AND  IRP_CASH_COUNTR_NO = '"+counterno+"'") ; 
 					
 					rs = ps.executeQuery();
 					if (rs.next()) {
-						jsonResponse.put("receipts_count", rs.getString("CNT"));
+						jsonResponse.put("receipts_count", rs.getInt("CNT"));
 						jsonResponse.put("status", "success");
+						
+							if(rs.getInt("CNT") == 0) {
+								ps1 = dbConnection.prepareStatement("SELECT NVL(MAX(IRP_RCPT_NO),0)+1 NEW_RECEIPT_NUMBER "
+										+ " FROM INITIAL_RCPT_PYMNT "
+										+ " WHERE "
+										+ " IRP_RCPT_DT= (  SELECT MAX(IRP_RCPT_DT) FROM INITIAL_RCPT_PYMNT "
+														+ "	WHERE IRP_RCPT_DT< TO_DATE('"+receiptdate+"','DD/MM/YYYY') AND  "
+														+ " IRP_CASH_COUNTR_NO = '"+counterno+"') AND  "
+										+ " IRP_CASH_COUNTR_NO = '"+counterno+"' ") ; 
+								
+								rs1 = ps1.executeQuery();
+								if (rs1.next()) {
+									jsonResponse.put("NEW_RECEIPT_NUMBER", rs1.getInt("NEW_RECEIPT_NUMBER"));
+									jsonResponse.put("new_receipt",true);
+								}else {
+									jsonResponse.put("NEW_RECEIPT_NUMBER", receiptno);
+									jsonResponse.put("new_receipt",false);
+								}
+							}
+						
 					}else {
 						jsonResponse.put("status", "error");
-						jsonResponse.put("receipts_count", "-1");
+						jsonResponse.put("receipts_count", -1);
 					}
 				}else {
 					jsonResponse.put("status", "error");
@@ -1439,6 +1462,66 @@ JSONObject json_response = new JSONObject();
 			DBManagerResourceRelease.close(ps);
 			DBManagerResourceRelease.close(rs);
 		}
+		return jsonResponse;
+	}
+
+	@Override
+	public JSONObject getfirstreceiptnumber(JSONObject object, HttpServletRequest request) {
+		// TODO Auto-generated method stub
+		PreparedStatement ps1 = null;
+		ResultSet rs1 = null;
+		JSONObject jsonResponse = new JSONObject();
+		
+		
+		try {
+			
+			if(!object.isEmpty()){
+				
+				String receiptdate  = (String)object.get("receiptdate");
+				String counterno  = (String)object.get("counterno");
+				String conn_type = (String) object.get("conn_type");
+				
+				if(conn_type.equalsIgnoreCase("LT")){
+					dbConnection = databaseObj.getDatabaseConnection();
+				}else if(conn_type.equals("HT")){
+					dbConnection = databaseObj.getHTDatabaseConnection();
+				}
+				
+				if(dbConnection != null){
+						ps1 = dbConnection.prepareStatement("SELECT NVL(MAX(IRP_RCPT_NO),0)+1 NEW_RECEIPT_NUMBER "
+								+ " FROM INITIAL_RCPT_PYMNT "
+								+ " WHERE "
+								+ " IRP_RCPT_DT= (  SELECT MAX(IRP_RCPT_DT) FROM INITIAL_RCPT_PYMNT "
+												+ "	WHERE IRP_RCPT_DT<= TO_DATE('"+receiptdate+"','DD/MM/YYYY') AND  "
+												+ " IRP_CASH_COUNTR_NO = '"+counterno+"') AND  "
+								+ " IRP_CASH_COUNTR_NO = '"+counterno+"' ") ; 
+						
+						rs1 = ps1.executeQuery();
+						if (rs1.next()) {
+							jsonResponse.put("NEW_RECEIPT_NUMBER", rs1.getInt("NEW_RECEIPT_NUMBER"));
+							jsonResponse.put("new_receipt",true);
+							jsonResponse.put("status", "success");
+						}
+				}
+				else {
+					jsonResponse.put("status", "error");
+					jsonResponse.put("message", "Database Query / Runtime Error .");
+				}
+			}		
+		} catch (SQLException e) {
+			System.out.println("Exception thrown " + e);
+			jsonResponse.put("status", "error");
+			jsonResponse.put("message", "Database Query / Runtime Error .");
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			jsonResponse.put("status", "error");
+			jsonResponse.put("message", " Database Query / Runtime Error.");
+		} finally {
+			DBManagerResourceRelease.close(rs1);
+			DBManagerResourceRelease.close(ps1);
+		}
+		
 		return jsonResponse;
 	}
 	

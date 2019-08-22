@@ -2181,6 +2181,16 @@ public class RouterServer {
 	}
 	
 	@POST
+	@Path("/getfirstreceiptnumber")
+	@Consumes({MediaType.APPLICATION_JSON})
+	@Produces({MediaType.APPLICATION_JSON})
+	public JSONObject getfirstreceiptnumber(final JSONObject object, @Context HttpServletRequest request){
+		
+		System.out.println(object);
+		return cashObj.getfirstreceiptnumber(object,request);
+	}
+	
+	@POST
 	@Path("/savereceiptdetailsmanualreceipts")
 	@Consumes({MediaType.APPLICATION_JSON})
 	@Produces({MediaType.APPLICATION_JSON})
