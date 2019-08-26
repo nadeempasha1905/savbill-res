@@ -179,6 +179,14 @@ public class ReportGenerationImpl implements IReportGeneration {
 		String transformer_code = request.getParameter("transformer_code");
 		String gps = request.getParameter("gps");
 		
+		String rr_number = request.getParameter("rr_number");
+		String no_of_months = request.getParameter("no_of_months");
+		String om_code = request.getParameter("om_code");
+		String reading_day = request.getParameter("reading_day");
+		
+		
+		
+		
 		try {
 		if (conn_type.equalsIgnoreCase("LT")) {
 				dbConnection = databaseObj.getDatabaseConnection();
@@ -199,6 +207,9 @@ public class ReportGenerationImpl implements IReportGeneration {
 			}else if(report_type.equals("MAIN_DCB")){
 				fileName = "DCBReport";
 				report_title = "DCB for the month of "+month_year;
+			}else if(report_type.equals("LIST_BILLS")){
+				fileName = "ListBillReport";
+				report_title = "List of Bill Details";
 			}
 
 	        try {
@@ -240,6 +251,11 @@ public class ReportGenerationImpl implements IReportGeneration {
 	            parameterMap.put("feeder_code", feeder_code);
 	            parameterMap.put("transformer_code", transformer_code);
 	            parameterMap.put("gps", gps);
+	            
+	            parameterMap.put("rr_number", rr_number);
+	            parameterMap.put("no_of_months", no_of_months);
+	            parameterMap.put("om_code", om_code);
+	            parameterMap.put("reading_day", reading_day);
 	            
 	            System.out.println(parameterMap);
 	            

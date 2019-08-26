@@ -385,11 +385,11 @@ public class AccountManagementImpl implements IAccountManagement {
 				accountsCS.setString(2, rr_no);
 				accountsCS.registerOutParameter(3, OracleTypes.CURSOR);
 				accountsCS.setString(4, (String)object.get("no_of_months"));
-				accountsCS.setString(5, (String)object.get("from_date"));
-				accountsCS.setString(6, (String)object.get("to_date"));
+				accountsCS.setString(5, (String)object.get("fromdate"));
+				accountsCS.setString(6, (String)object.get("todate"));
 				accountsCS.setString(7, (String)object.get("om_code"));
-				accountsCS.setString(8, (String)object.get("tariff_codes"));
-				accountsCS.setString(9, (String)object.get("mr_code"));
+				accountsCS.setString(8, (String)object.get("tariffs"));
+				accountsCS.setString(9, (String)object.get("mrcode"));
 				accountsCS.setString(10, (String)object.get("reading_day"));
 				accountsCS.executeUpdate();
 				accountsRS = (ResultSet) accountsCS.getObject(3);
