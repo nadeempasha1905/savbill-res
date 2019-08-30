@@ -460,7 +460,7 @@ public class ReportGenerationImpl implements IReportGeneration {
 			while (accountsRS.next()) {
 				JSONObject ackobj = new JSONObject();
 
-				System.out.println(accountsRS.getString("fy"));
+				//System.out.println(accountsRS.getString("fy"));
 				ackobj.put("year", accountsRS.getString("fy"));
 				array.add(ackobj);
 
