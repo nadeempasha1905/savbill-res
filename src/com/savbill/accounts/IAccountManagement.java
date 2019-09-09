@@ -44,6 +44,8 @@ public interface IAccountManagement {
 	JSONObject upsertFixedAvgUnits(JSONObject object);
 	
 	JSONObject getAdjustmentDetails(JSONObject object);
+	JSONObject getreceiptdetailstoadjust(JSONObject object);
+	
 	
 	JSONObject getDisconnectionDetails(JSONObject object);
 	
@@ -86,4 +88,7 @@ public interface IAccountManagement {
 	JSONObject insertWithdrawlDetails(JSONObject data);
 	JSONObject getWithdrawlDetailsForApproval(JSONObject object);
 	JSONObject approveRejectWithdrawals(JSONObject data);
+	JSONObject getreceiptdetailsforchequedisno(JSONObject object);
+	JSONObject dochequedishonour(JSONObject object);
+	
 }

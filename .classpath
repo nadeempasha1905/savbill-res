@@ -14,10 +14,6 @@
 	<classpathentry kind="con" path="org.eclipse.jst.j2ee.internal.web.container"/>
 	<classpathentry kind="con" path="org.eclipse.jst.j2ee.internal.module.container"/>
 	<classpathentry kind="lib" path="WebContent/WEB-INF/lib/asm-3.1.jar"/>
-	<classpathentry kind="lib" path="WebContent/WEB-INF/lib/commons-beanutils-1.8.2.jar"/>
-	<classpathentry kind="lib" path="WebContent/WEB-INF/lib/commons-collections.jar"/>
-	<classpathentry kind="lib" path="WebContent/WEB-INF/lib/commons-lang.jar"/>
-	<classpathentry kind="lib" path="WebContent/WEB-INF/lib/commons-logging-1.0.4.jar"/>
 	<classpathentry kind="lib" path="WebContent/WEB-INF/lib/cors-filter-1.7.1.jar"/>
 	<classpathentry kind="lib" path="WebContent/WEB-INF/lib/ezmorph.jar"/>
 	<classpathentry kind="lib" path="WebContent/WEB-INF/lib/jackson-core-asl-1.9.2.jar"/>
@@ -40,10 +36,21 @@
 	<classpathentry kind="lib" path="WebContent/WEB-INF/lib/sunmscapi.jar"/>
 	<classpathentry kind="lib" path="WebContent/WEB-INF/lib/sunpkcs11.jar"/>
 	<classpathentry kind="lib" path="WebContent/WEB-INF/lib/urlrewritefilter-4.0.3.jar"/>
-	<classpathentry kind="lib" path="WebContent/WEB-INF/lib/jasperreports-4.7.0.jar"/>
 	<classpathentry kind="lib" path="WebContent/WEB-INF/lib/jasperreports-core-renderer.jar"/>
 	<classpathentry kind="lib" path="WebContent/WEB-INF/lib/jasperreports-extensions-3.5.3.jar"/>
-	<classpathentry kind="lib" path="WebContent/WEB-INF/lib/jasperreports-fonts-4.5.0.jar"/>
-	<classpathentry kind="lib" path="WebContent/WEB-INF/lib/itext-2.1.0.jar"/>
+	<classpathentry kind="lib" path="WebContent/WEB-INF/lib/jasperreports-fonts-6.5.1.jar"/>
+	<classpathentry kind="lib" path="WebContent/WEB-INF/lib/commons-beanutils-1.9.3.jar"/>
+	<classpathentry kind="lib" path="WebContent/WEB-INF/lib/commons-collections-3.2.2.jar"/>
+	<classpathentry kind="lib" path="WebContent/WEB-INF/lib/commons-lang-2.6.jar"/>
+	<classpathentry kind="lib" path="WebContent/WEB-INF/lib/commons-logging-1.1.1.jar"/>
+	<classpathentry kind="lib" path="WebContent/WEB-INF/lib/core-3.2.1.jar"/>
+	<classpathentry kind="lib" path="WebContent/WEB-INF/lib/ecj-4.4.2.jar"/>
+	<classpathentry kind="lib" path="WebContent/WEB-INF/lib/icu4j-57.1.jar"/>
+	<classpathentry kind="lib" path="WebContent/WEB-INF/lib/itext-2.1.7.js6.jar"/>
+	<classpathentry kind="lib" path="WebContent/WEB-INF/lib/jackson-annotations-2.1.4.jar"/>
+	<classpathentry kind="lib" path="WebContent/WEB-INF/lib/jackson-core-2.1.4.jar"/>
+	<classpathentry kind="lib" path="WebContent/WEB-INF/lib/jackson-databind-2.1.4.jar"/>
+	<classpathentry kind="lib" path="WebContent/WEB-INF/lib/jakarta-regexp-1.4.jar"/>
+	<classpathentry kind="lib" path="WebContent/WEB-INF/lib/jasperreports-6.5.1.jar"/>
 	<classpathentry kind="output" path="build/classes"/>
 </classpath>

@@ -148,6 +148,8 @@ public class DBQueries {
 	public static final String UPDATE_ECS_DETAILS = "{call PKG_ACCOUNTS.UPDATE_ECS_DETAILS(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)}";
 	
 	public static final String GET_CHQ_DIS_DETAILS = "{call PKG_ACCOUNTS.GET_CHQ_DIS_DETAILS(?,?,?,?,?,?,?)}";
+	public static final String GET_CHQ_DIS_RCPT_DETAILS = "{call PKG_ACCOUNTS.GET_CHQ_DIS_RCPT_DETAILS(?,?,?,?,?)}";
+	public static final String DO_CHEQUE_BOUNCE = "{call PKG_CHQ_DISHONOUR.DO_CHEQUE_BOUNCE(?,?,?,?,?,?,?,?,?,?)}";
 	
 	public static final String GET_OTHER_CHQ_DIS_DETAILS = "{call PKG_ACCOUNTS.GET_OTH_CHQ_DIS_DETAILS(?,?,?,?,?,?,?)}";
 	

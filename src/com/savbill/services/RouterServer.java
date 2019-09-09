@@ -1078,6 +1078,24 @@ public class RouterServer {
 	}
 	
 	@POST
+	@Path("/dochequedishonour")
+	@Consumes({MediaType.APPLICATION_JSON})
+	@Produces({MediaType.APPLICATION_JSON})
+	public JSONObject dochequedishonour(final JSONObject object){
+		
+		return accountsObj.dochequedishonour(object);
+	}
+	
+	@POST
+	@Path("/getreceiptdetailsforchequedisno")
+	@Consumes({MediaType.APPLICATION_JSON})
+	@Produces({MediaType.APPLICATION_JSON})
+	public JSONObject getreceiptdetailsforchequedisno(final JSONObject object){
+		
+		return accountsObj.getreceiptdetailsforchequedisno(object);
+	}
+	
+	@POST
 	@Path("/getotherchequedetails")
 	@Consumes({MediaType.APPLICATION_JSON})
 	@Produces({MediaType.APPLICATION_JSON})
@@ -1120,6 +1138,15 @@ public class RouterServer {
 	public JSONObject getAdjustmentDetails(final JSONObject object){
 		
 		return accountsObj.getAdjustmentDetails(object);
+	}
+	
+	@POST
+	@Path("/getreceiptdetailstoadjust")
+	@Consumes({MediaType.APPLICATION_JSON})
+	@Produces({MediaType.APPLICATION_JSON})
+	public JSONObject getreceiptdetailstoadjust(final JSONObject object){
+		
+		return accountsObj.getreceiptdetailstoadjust(object);
 	}
 	
 	@POST

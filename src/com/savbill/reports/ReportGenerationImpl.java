@@ -31,7 +31,6 @@ import net.sf.jasperreports.engine.JasperFillManager;
 import net.sf.jasperreports.engine.JasperPrint;
 import net.sf.jasperreports.engine.export.JRPdfExporter;
 import net.sf.jasperreports.engine.query.JRQueryExecuterFactory;
-import net.sf.jasperreports.engine.util.JRProperties;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import oracle.jdbc.OracleTypes;
@@ -52,8 +51,11 @@ public class ReportGenerationImpl implements IReportGeneration {
         Also you may notice that line below is marked as deprecated. 
         However in my case the export to pdf fails without this line being executed. */
     
-      JRProperties.setProperty( JRQueryExecuterFactory.QUERY_EXECUTER_FACTORY_PREFIX+"plsql"
-                              ,"com.jaspersoft.jrx.query.PlSqlQueryExecuterFactory");
+		/*
+		 * JRProperties.setProperty(
+		 * JRQueryExecuterFactory.QUERY_EXECUTER_FACTORY_PREFIX+"plsql"
+		 * ,"com.jaspersoft.jrx.query.PlSqlQueryExecuterFactory");
+		 */
     
       /* Prepare Jasper print and exporter objects in lines below */
     } 

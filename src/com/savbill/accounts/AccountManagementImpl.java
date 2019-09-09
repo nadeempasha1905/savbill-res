@@ -4482,4 +4482,213 @@ public class AccountManagementImpl implements IAccountManagement {
 		return obj;
 	}
 
+	@Override
+	public JSONObject getreceiptdetailsforchequedisno(JSONObject object) {
+		// TODO Auto-generated method stub
+		CallableStatement accountsCS = null;
+		ResultSet accountsRS = null;
+		JSONArray array = new JSONArray();
+		JSONObject obj = new JSONObject();
+		
+		String conn_type = object.getString("conn_type");
+		
+		try {
+			
+			if(conn_type.equalsIgnoreCase("LT")){
+				dbConnection = databaseObj.getDatabaseConnection();
+			}else if(conn_type.equals("HT")){
+				dbConnection = databaseObj.getHTDatabaseConnection();
+			}
+			accountsCS=dbConnection.prepareCall(DBQueries.GET_CHQ_DIS_RCPT_DETAILS);
+			accountsCS.setString(1, object.getString("location_code"));
+			accountsCS.setString(2, object.getString("cheque_number"));
+			accountsCS.setString(3, object.getString("cheque_date"));
+			accountsCS.setString(4, object.getString("bank"));
+			accountsCS.registerOutParameter(5, OracleTypes.CURSOR);
+			accountsCS.executeUpdate();
+			accountsRS = (ResultSet) accountsCS.getObject(5);
+			
+			while(accountsRS.next()){
+				
+				JSONObject ackobj=new JSONObject();
+				
+				ackobj.put("row_num", accountsRS.getString("row_num"));
+				ackobj.put("chq_dd_no", accountsRS.getString("chq_dd_no"));
+				ackobj.put("chq_dd_dt", accountsRS.getString("chq_dd_dt"));
+				ackobj.put("drawn_bank", accountsRS.getString("drawn_bank"));
+				ackobj.put("chq_dd_amt", accountsRS.getString("chq_dd_amt"));
+				ackobj.put("chq_dis_flag", accountsRS.getString("chq_dis_flag"));
+				ackobj.put("chq_dis_penalty", accountsRS.getString("chq_dis_penalty"));
+				ackobj.put("rcpt_no", accountsRS.getString("rcpt_no"));
+				ackobj.put("rcpt_dt", accountsRS.getString("rcpt_dt"));
+				ackobj.put("counter", accountsRS.getString("counter"));
+				ackobj.put("rr_no", accountsRS.getString("rr_no"));
+				ackobj.put("rcpt_amount", accountsRS.getString("rcpt_amount"));
+				ackobj.put("debit_amount", accountsRS.getString("debit_amount"));
+				
+				array.add(ackobj);
+				
+			}
+			if(array.isEmpty()) {
+				obj.put("status", "success");
+				obj.put("message", "No Records Found !!!");
+			} else{
+				obj.put("status", "success");
+				obj.put("message", "Receipt Details For Cheque Retrieved !!!");
+				obj.put("receipt_cheque_details", array);
+			}
+			
+		} catch (Exception e) {
+			obj.put("status", "fail");
+			e.printStackTrace();
+			obj.put("message", "database not connected");
+		}finally
+		{
+			DBManagerResourceRelease.close(accountsRS, accountsCS);
+			//DBManagerResourceRelease.close(accountsRS, accountsCS, dbConnection);
+		}
+		
+		return obj;
+	}
+
+	@Override
+	public JSONObject dochequedishonour(JSONObject object) {
+		// TODO Auto-generated method stub
+		CallableStatement accountsCS = null;
+		ResultSet accountsRS = null;
+		JSONArray array = new JSONArray();
+		JSONObject obj = new JSONObject();
+		
+		String conn_type = object.getString("conn_type");
+		
+		try {
+			
+			if(conn_type.equalsIgnoreCase("LT")){
+				dbConnection = databaseObj.getDatabaseConnection();
+			}else if(conn_type.equals("HT")){
+				dbConnection = databaseObj.getHTDatabaseConnection();
+			}
+			accountsCS=dbConnection.prepareCall(DBQueries.DO_CHEQUE_BOUNCE);
+			accountsCS.setString(1, object.getString("cheque_number"));
+			accountsCS.setString(2, object.getString("cheque_date"));
+			accountsCS.setString(3, object.getString("bank"));
+			accountsCS.setString(4, object.getString("userid"));
+			accountsCS.setString(5, object.getString("remarks"));
+			accountsCS.setString(6, object.getString("cheque_dis_date"));
+			accountsCS.setString(7, object.getString("penalty_amount"));
+			accountsCS.setString(8, object.getString("bank_charges"));
+			accountsCS.setString(9, object.getString("location"));
+			accountsCS.registerOutParameter(10, OracleTypes.VARCHAR);
+			accountsCS.executeUpdate();
+			String result = (String) accountsCS.getObject(10);
+			
+			if(!result.equals("TRUE")) {
+				obj.put("status", "fail");
+				obj.put("message", "Cheque Dishonour Failed !!!");
+			} else{
+				obj.put("status", "success");
+				obj.put("message", "Cheque Dishonour Done Successfully !!!");
+			}
+			
+		} catch (Exception e) {
+			obj.put("status", "fail");
+			e.printStackTrace();
+			obj.put("message", "database not connected");
+		}finally
+		{
+			DBManagerResourceRelease.close(accountsRS, accountsCS);
+			//DBManagerResourceRelease.close(accountsRS, accountsCS, dbConnection);
+		}
+		
+		return obj;
+	}
+
+	@Override
+	public JSONObject getreceiptdetailstoadjust(JSONObject object) {
+		// TODO Auto-generated method stub
+		PreparedStatement ps = null;
+		ResultSet rs = null;
+		PreparedStatement ps1 = null;
+		ResultSet rs1 = null;
+		JSONObject jsonResponse = new JSONObject();
+		
+		try {
+			
+			if(!object.isEmpty()){
+				
+				String conn_type = (String)object.get("conn_type");
+				
+				if(conn_type.equals("LT") || conn_type == "LT"){
+					dbConnection = databaseObj.getDatabaseConnection();
+				}else if(conn_type.equals("HT") || conn_type == "HT"){
+					dbConnection = databaseObj.getHTDatabaseConnection();
+				}
+				
+				String Query = "SELECT COUNT(*) CNT FROM ADJUSTMENTS " +
+					" WHERE ADJ_BRP_RCPT_DT = TO_DATE('"+ (String)object.get("receipt_date")+"','DD/MM/YYYY') "+  
+						" AND ADJ_BRP_RCPT_NO = '"+(String)object.get("receipt_number")+"' AND ADJ_BRP_CASH_COUNTR_NO = '"+(String)object.get("counter_number")+"'";
+				
+				System.out.println(Query);
+					ps = dbConnection.prepareStatement(Query) ; 
+					rs = ps.executeQuery();
+					if (rs.next()) {
+						
+						if(rs.getInt("CNT") > 1) {
+							
+							jsonResponse.put("status", "error");
+							jsonResponse.put("message", "This receipt has already been adjusted !!! ");
+							
+							
+						}else {
+							
+							Query =" SELECT RP_PURPOSE_KEY, RP_PURPOSE, RP_AMT_PAID,TO_CHAR(RP_RCPT_DT,'dd/mm/yyyy'),RP_RCPT_NO,RP_CASH_COUNTR_NO,RP_CANCEL_FLG"
+									+ " FROM RCPT_PYMNT "
+									+ " WHERE RP_RCPT_DT = TO_DATE( "+"'"+ (String)object.get("receipt_date")+"' ,'dd/mm/yyyy') "
+									+ " AND RP_RCPT_NO = "+"'"+(String)object.get("receipt_number")+"' "
+									+ " AND RP_CASH_COUNTR_NO = "+"'"+(String)object.get("counter_number")+"' "
+									+ " AND RP_CANCEL_FLG = 'N'";
+							
+							System.out.println(Query);
+							ps1 = dbConnection.prepareStatement(Query) ; 
+							rs1 = ps1.executeQuery();
+							
+							if(rs1.next()) {
+								
+								jsonResponse.put("status", "success");
+								jsonResponse.put("receipt_rr_number", rs1.getString("RP_PURPOSE_KEY").toString().substring(7));
+								jsonResponse.put("receipt_purpose", rs1.getString("RP_PURPOSE"));
+								jsonResponse.put("receipt_amount_paid", rs1.getString("RP_AMT_PAID"));
+								
+							}else {
+								jsonResponse.put("status", "error");
+								jsonResponse.put("message", "Receipt Details Not Found !!!");
+							}
+							
+						}
+						
+					}
+					else{
+						jsonResponse.put("status", "error");
+						jsonResponse.put("message", "No Records Found For Rebate Type.");
+					}
+			}else{
+				jsonResponse.put("status", "error");
+				jsonResponse.put("message", "Invalid Inputs / No Records Found For Rebate Type.");
+			}
+		} catch (SQLException e) {
+			System.out.println("Exception thrown " + e);
+			jsonResponse.put("status", "error");
+			jsonResponse.put("message", "Database Query / Runtime Error .");
+		} catch (Exception e) {
+			e.printStackTrace();
+			jsonResponse.put("status", "error");
+			jsonResponse.put("message", " Database Query / Runtime Error.");
+		} finally {
+			DBManagerResourceRelease.close(rs, ps);
+			//DBManagerResourceRelease.close(rs, ps, dbConnection);
+		}
+		
+		return jsonResponse;
+	}
+
 }
