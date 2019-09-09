@@ -186,6 +186,8 @@ public class ReportGenerationImpl implements IReportGeneration {
 		String om_code = request.getParameter("om_code");
 		String reading_day = request.getParameter("reading_day");
 		
+		String cashcounternumber = request.getParameter("cashcounternumber");
+		
 		
 		
 		
@@ -212,8 +214,11 @@ public class ReportGenerationImpl implements IReportGeneration {
 			}else if(report_type.equals("LIST_BILLS")){
 				fileName = "ListBillReport";
 				report_title = "List of Bill Details";
+			}else if(report_type.equals("PAYMENT_PURPOSE_WISE")){
+				fileName = "Paymentpurposewisereport";
+				report_title = "Purpose Wise Collection for "+selected_location+" for the date "+fromdate+" to "+todate;
 			}
-
+				
 	        try {
 	        	String contextPath = request.getServletContext().getRealPath("ReportGenerationImpl.java");
 	        	File contextfile = new File(contextPath);
@@ -258,6 +263,10 @@ public class ReportGenerationImpl implements IReportGeneration {
 	            parameterMap.put("no_of_months", no_of_months);
 	            parameterMap.put("om_code", om_code);
 	            parameterMap.put("reading_day", reading_day);
+	            
+	            parameterMap.put("cashcounternumber", cashcounternumber);
+	            
+	            
 	            
 	            System.out.println(parameterMap);
 	            
