@@ -1,12 +1,17 @@
 package com.savbill.accounts;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.ResourceBundle;
 
+import javax.servlet.http.HttpServletRequest;
 
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
@@ -4689,6 +4694,274 @@ public class AccountManagementImpl implements IAccountManagement {
 		}
 		
 		return jsonResponse;
+	}
+
+	@Override
+	public JSONObject dovalidaterrnumber(JSONObject object) {
+		// TODO Auto-generated method stub
+
+		PreparedStatement ps = null;
+		ResultSet rs = null;
+		JSONObject jsonResponse = new JSONObject();
+		
+		try {
+			
+			if(!object.isEmpty()){
+				
+				String conn_type = (String)object.get("conn_type");
+				
+				if(conn_type.equals("LT") || conn_type == "LT"){
+					dbConnection = databaseObj.getDatabaseConnection();
+				}else if(conn_type.equals("HT") || conn_type == "HT"){
+					dbConnection = databaseObj.getHTDatabaseConnection();
+				}
+				
+				String Query = "SELECT CB_BILL_NO, CB_BILL_DT, NVL(CB_RR_STS,'N') CB_RR_STS FROM cust_bill WHERE CB_RR_NO = '"+(String)object.get("to_rrno")+"'";
+				
+				System.out.println(Query);
+					ps = dbConnection.prepareStatement(Query) ; 
+					rs = ps.executeQuery();
+					if (rs.next()) {
+						if(!(rs.getString("CB_RR_STS").equals("N"))) {
+							jsonResponse.put("rr_status",true);
+							jsonResponse.put("status", "success");
+							jsonResponse.put("message", "Processing is being done for this RR-number.");
+						}else {
+							jsonResponse.put("rr_status",true);
+							jsonResponse.put("status", "success");
+							jsonResponse.put("message", "RR-number found.");
+						}
+					}
+					else{
+						jsonResponse.put("rr_status", false);
+						jsonResponse.put("status", "error");
+						jsonResponse.put("message", "Entered RR Number Does Not Exists !!!");
+					}
+			}else{
+				jsonResponse.put("status", "error");
+				jsonResponse.put("message", "Invalid Inputs ");
+			}
+		} catch (SQLException e) {
+			System.out.println("Exception thrown " + e);
+			jsonResponse.put("status", "error");
+			jsonResponse.put("message", "Database Query / Runtime Error .");
+		} catch (Exception e) {
+			e.printStackTrace();
+			jsonResponse.put("status", "error");
+			jsonResponse.put("message", " Database Query / Runtime Error.");
+		} finally {
+			DBManagerResourceRelease.close(rs, ps);
+			//DBManagerResourceRelease.close(rs, ps, dbConnection);
+		}
+		
+		return jsonResponse;
+	}
+
+	@Override
+	public JSONObject saveadjustmentrecord(JSONObject object,HttpServletRequest request) {
+		// TODO Auto-generated method stub
+		
+		CallableStatement accountsCS = null;
+		PreparedStatement ps = null;
+		ResultSet rs = null;
+		PreparedStatement ps1 = null;
+		ResultSet rs1 = null;
+		JSONObject jsonResponse = new JSONObject();
+		
+		try {
+			
+			ResourceBundle propsBundle=ResourceBundle.getBundle("savbilldb");
+			String db_user = propsBundle.getString("USER");
+			String db_password = propsBundle.getString("PASS");
+			
+			if(!object.isEmpty()){
+				
+				String conn_type = (String)object.get("conn_type");
+				
+				if(conn_type.equals("LT") || conn_type == "LT"){
+					dbConnection = databaseObj.getDatabaseConnection();
+				}else if(conn_type.equals("HT") || conn_type == "HT"){
+					dbConnection = databaseObj.getHTDatabaseConnection();
+				}
+				
+				boolean Check_Duplicate_Receipt = false, Check_Duplicate_AdjNO = false;
+				
+				String Query = " SELECT ADJ_BRP_RCPT_NO , ADJ_BRP_CASH_COUNTR_NO FROM ADJUSTMENTS " +
+							   " WHERE ADJ_BRP_RCPT_NO ="+"'"+(String)object.get("receipt_number")+"'" +
+						       " AND ADJ_BRP_RCPT_DT =To_DATE('"+(String)object.get("receipt_date")+"','DD/MM/YYYY')" +
+						       " AND ADJ_BRP_CASH_COUNTR_NO ="+"'"+(String)object.get("counter_number")+"'";
+						
+				
+				System.out.println(Query);
+					ps = dbConnection.prepareStatement(Query) ; 
+					rs = ps.executeQuery();
+					
+					if(rs.next()) {
+						Check_Duplicate_Receipt = true;
+					}
+					
+				Query =" SELECT ADJ_NO,TO_DATE(ADJ_DT,'DD/MM/YYYY') ADJ_DT FROM ADJUSTMENTS" 
+						+ " WHERE ADJ_NO = "+"'"+(String)object.get("adjustment_number")+"' AND ADJ_DT = TO_DATE( "+"'"+(String)object.get("receipt_date")+"' , 'dd/mm/YYYY') " ;
+						
+				
+				System.out.println(Query);
+					ps1 = dbConnection.prepareStatement(Query) ; 
+					rs1 = ps.executeQuery();
+					
+					if(rs1.next()) {
+						Check_Duplicate_AdjNO = true;
+					}
+					
+					
+					if(!Check_Duplicate_AdjNO  && !Check_Duplicate_Receipt) {
+						
+						accountsCS=dbConnection.prepareCall(DBQueries.DO_ADJUSTMENT);
+						accountsCS.setString(1, object.getString("adjustment_date"));
+						accountsCS.setString(2, object.getString("adjustment_number"));
+						accountsCS.setString(3, object.getString("jv_number"));
+						accountsCS.setString(4, object.getString("receipt_number"));
+						accountsCS.setString(5, object.getString("receipt_date"));
+						accountsCS.setString(6, object.getString("counter_number"));
+						accountsCS.setString(7, object.getString("to_rrnumber"));
+						accountsCS.setString(8, object.getString("payment_purpose_descr"));
+						accountsCS.setString(9, object.getString("remarks"));
+						accountsCS.setString(10, object.getString("user"));
+						accountsCS.setString(11, object.getString("from_rr_flag"));
+						accountsCS.setString(12, object.getString("to_rr_flag"));
+						accountsCS.setString(13, db_user);
+						accountsCS.setString(14, db_password);
+						accountsCS.registerOutParameter(15, OracleTypes.VARCHAR);
+						accountsCS.executeUpdate();
+						String result = (String) accountsCS.getObject(15);
+						
+						if(!result.equals("TRUE")) {
+							jsonResponse.put("status", "fail");
+							jsonResponse.put("message", "Adjustment Failed !!!");
+							
+						} else{
+							jsonResponse.put("status", "success");
+							jsonResponse.put("message", "Adjustment Done Successfully !!!");
+							
+							CallReconProgram(
+									object.getString("to_rrnumber"),
+									object.getString("receipt_date"),
+									object.getString("location_code"),
+									object.getString("user"),
+									request.getServletContext().getRealPath("AccountManagementImpl.java"));
+							
+							ps.close();
+							rs.close();
+							
+							Query = " UPDATE CUST_BILL SET CB_RR_STS='N',CB_PREV_STS='A' "
+									+ " WHERE CB_RR_NO IN ('"+object.getString("to_rrnumber")+"','"+object.getString("from_rrnumber")+"') " ;
+								
+						
+						System.out.println(Query);
+							ps = dbConnection.prepareStatement(Query) ; 
+							ps.executeUpdate();
+						}
+						
+					}
+					
+			}else{
+				jsonResponse.put("status", "error");
+				jsonResponse.put("message", "Invalid Inputs / No Records Found For Rebate Type.");
+			}
+		} catch (SQLException e) {
+			System.out.println("Exception thrown " + e);
+			jsonResponse.put("status", "error");
+			jsonResponse.put("message", "Database Query / Runtime Error .");
+		} catch (Exception e) {
+			e.printStackTrace();
+			jsonResponse.put("status", "error");
+			jsonResponse.put("message", " Database Query / Runtime Error.");
+		} finally {
+			DBManagerResourceRelease.close(rs, ps);
+			DBManagerResourceRelease.close(rs1, ps1);
+			//DBManagerResourceRelease.close(rs, ps, dbConnection);
+		}
+		
+		return jsonResponse;
+	}
+	
+	public boolean CallReconProgram(String new_purpose_key,String ReceiptDate,
+			String Location,String UserID, String recon_contextPath) {
+		// TODO Auto-generated method stub
+		
+		CallableStatement cstmt = null;
+		ResultSet rs = null;
+		String db_ip = "";
+		String database = "";
+		String db_user = "";
+		String db_pass = "";
+		String recon_PATH = "";
+		
+		try{
+			
+			try{
+		    	//resouce bundle to read string's specified in properties file
+		    	ResourceBundle propsBundle=ResourceBundle.getBundle("savbilldb");
+		        
+		    	db_ip = propsBundle.getString("IP");
+		        database = propsBundle.getString("DATABASE");
+		        db_user = propsBundle.getString("USER");
+		        db_pass = propsBundle.getString("PASS");
+		        recon_PATH = propsBundle.getString("PATH");
+		       
+		       } 
+		    catch(Exception e){
+		        System.out.println("error" + e);
+		       }	 
+			
+			//Call Reconcilation Program Here...................
+			System.out.println("Call Reconcilation Program Here...........");
+			
+			
+			System.out.println("Recon Program Starts Here...!");
+			
+			//Call The Respective Child Process...!
+			System.out.println("java -jar "+recon_PATH+"Reconcilation.jar "+db_ip+" "+db_user+"/"+db_pass+" "+database+" "+ReceiptDate + " "+new_purpose_key  );
+			
+			
+			Process p = null;
+			try {
+				p = Runtime.getRuntime().exec("java -jar "+recon_PATH+"Reconcilation.jar "+db_ip+" "+db_user+"/"+db_pass+" "+database+" "+ReceiptDate+ " "+new_purpose_key );
+			} catch (IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+			 
+	        final InputStream is = p.getInputStream();
+	        Thread t = new Thread(new Runnable() {
+	            public void run() {
+	                InputStreamReader isr = new InputStreamReader(is);
+	                int ch;
+	                try {
+	                    while ((ch = isr.read()) != -1) {
+	                        System.out.print((char) ch);
+	                    }
+	                } catch (IOException e) {
+	                    e.printStackTrace();
+	                }
+	            }
+	        });
+	        t.start();
+	        try {
+				p.waitFor();
+				t.join();
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+		}catch (Exception e) {
+			// TODO: handle exception
+			e.printStackTrace();
+			return false;
+		}finally{
+			
+		}
+		return true;
 	}
 
 }

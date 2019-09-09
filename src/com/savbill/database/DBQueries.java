@@ -159,6 +159,7 @@ public class DBQueries {
 	public static final String UPDATE_FIXED_AVG = "{call PKG_ACCOUNTS.UPDATE_FIXED_AVG(?,?,?,?,?,?,?)}";
 	
 	public static final String GET_ADJUSTMENT_DETAILS = "{call PKG_ACCOUNTS.GET_ADJUSTMENT_DETAILS(?,?,?,?,?,?,?)}";
+	public static final String DO_ADJUSTMENT = "{call Bill_Adjustments(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)}";
 	
 	public static final String GET_DISCONNECTION_DETAILS = "{call PKG_ACCOUNTS.GET_DISCONNECTION_DETAILS(?,?,?,?,?,?,?,?)}";
 	

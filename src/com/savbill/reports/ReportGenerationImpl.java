@@ -167,6 +167,7 @@ public class ReportGenerationImpl implements IReportGeneration {
 		String conn_type = request.getParameter("conn_type");
 		String report_wise = request.getParameter("report_wise");
 		String selected_location = request.getParameter("selected_location");
+		String search_location_name = request.getParameter("search_location_name");
 		String metercode = request.getParameter("metercode");
 		String tariffcodes = request.getParameter("tariffcodes");
 		String fromdate = request.getParameter("fromdate");
@@ -216,7 +217,7 @@ public class ReportGenerationImpl implements IReportGeneration {
 				report_title = "List of Bill Details";
 			}else if(report_type.equals("PAYMENT_PURPOSE_WISE")){
 				fileName = "Paymentpurposewisereport";
-				report_title = "Purpose Wise Collection for "+selected_location+" for the date "+fromdate+" to "+todate;
+				report_title = "Purpose Wise Collection for "+search_location_name+" for the date "+fromdate+" to "+todate;
 			}
 				
 	        try {
@@ -243,7 +244,7 @@ public class ReportGenerationImpl implements IReportGeneration {
 	            parameterMap.put("REPORT_TYPE", report_type);
 	            parameterMap.put("report_type", report_type);
 	            parameterMap.put("locationcode", selected_location);
-	            parameterMap.put("subdivision", selected_location);
+	            parameterMap.put("subdivision", search_location_name);
 	            parameterMap.put("fromDate", fromdate);
 	            parameterMap.put("toDate", todate);
 	            parameterMap.put("month_year", month_year);
@@ -265,6 +266,8 @@ public class ReportGenerationImpl implements IReportGeneration {
 	            parameterMap.put("reading_day", reading_day);
 	            
 	            parameterMap.put("cashcounternumber", cashcounternumber);
+	            
+	            parameterMap.put("imgPath", imgPath);
 	            
 	            
 	            

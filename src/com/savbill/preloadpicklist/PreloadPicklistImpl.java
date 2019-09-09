@@ -1013,12 +1013,13 @@ public class PreloadPicklistImpl implements IPreLoadPickList{
 						}
 						
 						if(dbConnection != null){
-							ps = dbConnection.prepareStatement(" select CCD_DESCR from code_detl where CCD_CCM_CD_TYP='PYMNT_PURP' order by 1  ");
+							ps = dbConnection.prepareStatement(" select CCD_CD_VAL,CCD_DESCR from code_detl where CCD_CCM_CD_TYP='PYMNT_PURP' order by 1  ");
 							rs = ps.executeQuery();
 							while (rs.next()) {
 								JSONObject meter = new JSONObject();
 								
 								meter.put("PAYMENT_PURPOSE_DESCR", rs.getString("CCD_DESCR"));
+								meter.put("PAYMENT_PURPOSE_CODE", rs.getString("CCD_CD_VAL"));
 								
 								MeterList.add(meter);
 								

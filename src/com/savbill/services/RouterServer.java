@@ -1096,6 +1096,26 @@ public class RouterServer {
 	}
 	
 	@POST
+	@Path("/dovalidaterrnumber")
+	@Consumes({MediaType.APPLICATION_JSON})
+	@Produces({MediaType.APPLICATION_JSON})
+	public JSONObject dovalidaterrnumber(final JSONObject object){
+		
+		return accountsObj.dovalidaterrnumber(object);
+	}
+	
+	@POST
+	@Path("/saveadjustmentrecord")
+	@Consumes({MediaType.APPLICATION_JSON})
+	@Produces({MediaType.APPLICATION_JSON})
+	public JSONObject saveadjustmentrecord(final JSONObject object,@Context HttpServletRequest request){
+		
+		return accountsObj.saveadjustmentrecord(object,request);
+	}
+	
+	
+	
+	@POST
 	@Path("/getotherchequedetails")
 	@Consumes({MediaType.APPLICATION_JSON})
 	@Produces({MediaType.APPLICATION_JSON})

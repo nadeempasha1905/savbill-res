@@ -1,5 +1,7 @@
 package com.savbill.accounts;
 
+import javax.servlet.http.HttpServletRequest;
+
 import net.sf.json.JSONObject;
 
 public interface IAccountManagement {
@@ -90,5 +92,7 @@ public interface IAccountManagement {
 	JSONObject approveRejectWithdrawals(JSONObject data);
 	JSONObject getreceiptdetailsforchequedisno(JSONObject object);
 	JSONObject dochequedishonour(JSONObject object);
+	JSONObject dovalidaterrnumber(JSONObject object);
+	JSONObject saveadjustmentrecord(JSONObject object, HttpServletRequest request);
 	
 }
