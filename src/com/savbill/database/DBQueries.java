@@ -109,6 +109,7 @@ public class DBQueries {
 	public static final String GET_RCPT_POSTED_DETIALS = "{call PKG_CASH.GET_RCPT_POSTED_DETAILS(?,?,?,?)}";
 	public static final String GET_LIST_OF_PAYMENTS = "{call PKG_CASH.GET_LIST_OF_PAYMENTS(?,?,?,?,?)}";
 	public static final String GET_RCPT_DETIALS_FOR_POST = "{call PKG_CASH.GET_RCPT_DETIALS_FOR_POST(?,?,?,?)}";
+	public static final String UPLOAD_MANUAL_RECEIPTS = "{call UPLOAD_HRT_RCPTS(?,?,?,?)}";
 
 	//Cash Section Module Ends
 	
@@ -203,7 +204,7 @@ public class DBQueries {
 	public static final String GET_WDRL_DETAILS_FOR_APPROVAL = "{call PKG_ACCOUNTS.GET_WDRL_DETAILS_FOR_APPROVAL(?,?)}";
 	public static final String APPROVE_WITHDRAWAL_DETAILS = "{call PKG_ACCOUNTS.APPROVE_WITHDRAWAL_DETAILS(?,?,?,?,?,?,?,?,?)}";
 	
-	public static final String GET_CASH_COUNTER_LIST = "{call PKG_ACCOUNTS.GET_CASH_COUNTER_LIST(?,?)}";
+	public static final String GET_CASH_COUNTER_LIST = "{call PKG_ACCOUNTS.GET_CASH_COUNTER_LIST(?,?,?)}";
 	
 	public static final String GET_DESIGNATIONS = "{call PKG_ACCOUNTS.GET_DESIGNATIONS(?)}";
 

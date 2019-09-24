@@ -2225,6 +2225,15 @@ public class RouterServer {
 	}
 	
 	@POST
+	@Path("/getreceiptsummarydetailshrt")
+	@Consumes({MediaType.APPLICATION_JSON})
+	@Produces({MediaType.APPLICATION_JSON})
+	public JSONObject getreceiptsummarydetailshrt(final JSONObject object){
+		
+		return cashObj.getreceiptsummarydetailshrt(object);
+	}
+	
+	@POST
 	@Path("/savereceiptdetails")
 	@Consumes({MediaType.APPLICATION_JSON})
 	@Produces({MediaType.APPLICATION_JSON})
@@ -2309,12 +2318,30 @@ public class RouterServer {
 	}
 	
 	@POST
+	@Path("/getreceiptdetailstocancel_hrt")
+	@Consumes({MediaType.APPLICATION_JSON})
+	@Produces({MediaType.APPLICATION_JSON})
+	public JSONObject getreceiptdetailstocancel_hrt(final JSONObject object){
+		
+		return cashObj.getreceiptdetailstocancel_hrt(object);
+	}
+	
+	@POST
 	@Path("/getchequedetailstocancel")
 	@Consumes({MediaType.APPLICATION_JSON})
 	@Produces({MediaType.APPLICATION_JSON})
 	public JSONObject getchequedetailstocancel(final JSONObject object){
 		
 		return cashObj.getchequedetailstocancel(object);
+	}
+	
+	@POST
+	@Path("/getchequedetailstocancel_hrt")
+	@Consumes({MediaType.APPLICATION_JSON})
+	@Produces({MediaType.APPLICATION_JSON})
+	public JSONObject getchequedetailstocancel_hrt(final JSONObject object){
+		
+		return cashObj.getchequedetailstocancel_hrt(object);
 	}
 	
 	@POST
@@ -2326,6 +2353,14 @@ public class RouterServer {
 		return cashObj.docancelreceipts(object);
 	}
 	
+	@POST
+	@Path("/docancelreceipts_hrt")
+	@Consumes({MediaType.APPLICATION_JSON})
+	@Produces({MediaType.APPLICATION_JSON})
+	public JSONObject docancelreceipts_hrt(final JSONObject object){
+		
+		return cashObj.docancelreceipts_hrt(object);
+	}
 	
 	@POST
 	@Path("/docancelcheques")
@@ -2334,6 +2369,15 @@ public class RouterServer {
 	public JSONObject docancelcheques(final JSONObject object){
 		
 		return cashObj.docancelcheques(object);
+	}
+	
+	@POST
+	@Path("/docancelcheques_hrt")
+	@Consumes({MediaType.APPLICATION_JSON})
+	@Produces({MediaType.APPLICATION_JSON})
+	public JSONObject docancelcheques_hrt(final JSONObject object){
+		
+		return cashObj.docancelcheques_hrt(object);
 	}
 	
 	@POST

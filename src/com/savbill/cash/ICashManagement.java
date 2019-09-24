@@ -30,4 +30,9 @@ public interface ICashManagement {
 	JSONObject getrrnumberdetails(JSONObject object);
 	JSONObject doprocessmrreset(JSONObject object);
 	JSONObject doprocessrrreset(JSONObject object);
+	JSONObject getreceiptsummarydetailshrt(JSONObject object);
+	JSONObject getreceiptdetailstocancel_hrt(JSONObject object);
+	JSONObject getchequedetailstocancel_hrt(JSONObject object);
+	JSONObject docancelreceipts_hrt(JSONObject object);
+	JSONObject docancelcheques_hrt(JSONObject object);
 }

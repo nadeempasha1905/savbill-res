@@ -958,8 +958,8 @@ public class CustomerManagementImpl implements ICustomerManagement {
 				
 					accountsCS=dbConnection.prepareCall(DBQueries.GET_CASH_COUNTER_LIST);
 					accountsCS.setString(1, location_code);
-					
 					accountsCS.registerOutParameter(2, OracleTypes.CURSOR);
+					accountsCS.setString(3, ((String) object.get("counter_type") == null ? "" : (String) object.get("counter_type")));
 					accountsCS.executeUpdate();
 					
 					accountsRS = (ResultSet) accountsCS.getObject(2);
