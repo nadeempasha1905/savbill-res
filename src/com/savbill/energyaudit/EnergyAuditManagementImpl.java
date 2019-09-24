@@ -2,7 +2,9 @@ package com.savbill.energyaudit;
 
 import java.sql.CallableStatement;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 
 import com.savbill.database.DBManagerIMPL;
 import com.savbill.database.DBManagerResourceRelease;
@@ -455,6 +457,80 @@ public class EnergyAuditManagementImpl implements IEnergyAuditManagement {
 			DBManagerResourceRelease.close(accountsRS, accountsCS);
 		}
 		return obj;
+	}
+
+	@Override
+	public JSONObject getentryrecordsforassessed(JSONObject object) {
+		// TODO Auto-generated method stub
+		CallableStatement accountsCS = null;
+		PreparedStatement ps = null;
+		ResultSet rs = null;
+		JSONObject jsonResponse = new JSONObject();
+		JSONArray jsonarray = new JSONArray();
+		
+		try {
+			
+			if(!object.isEmpty()){
+				
+				String conn_type = (String)object.get("conn_type");
+				
+				if(conn_type.equals("LT") || conn_type == "LT"){
+					dbConnection = databaseObj.getDatabaseConnection();
+				}else if(conn_type.equals("HT") || conn_type == "HT"){
+					dbConnection = databaseObj.getHTDatabaseConnection();
+				}
+				
+				
+				String Query =  " SELECT TAU_NO_INST,TAU_ASSD_UNITS, TAU_TRF_CATG, TAU_TC_No FROM TRSFMR_ASSED_UNITS  " +
+						" WHERE TAU_TC_No='"+(String)object.get("transformer_code")+"'  AND TAU_BCN_SUBSTN_NO ='"+(String)object.get("station_code")+"' AND" +
+						" TAU_BCN_FDR_NO='"+(String)object.get("feeder_code")+"' AND " +
+					    " TAU_BCN_OM_UNIT='"+(String)object.get("om_code")+"'  AND " + 
+						" TAU_RDG_DT=TO_DATE('"+(String)object.get("reading_date")+"','dd/mm/yyyy' )"+ 
+					    " ORDER BY TAU_TRF_CATG ASC ";
+						
+				
+				System.out.println(Query);
+					ps = dbConnection.prepareStatement(Query) ; 
+					rs = ps.executeQuery();
+					
+					while(rs.next()) {
+						JSONObject json = new JSONObject();
+						
+						json.put("no_of_installtions", rs.getString("TAU_NO_INST"));
+						json.put("assessed_units", rs.getString("TAU_ASSD_UNITS"));
+						json.put("transformer_no", rs.getString("TAU_TC_No"));
+						json.put("tariff_category", rs.getString("TAU_TRF_CATG"));
+						
+						jsonarray.add(json);
+					}
+					
+					if(!jsonarray.isEmpty()) {
+						jsonResponse.put("message", "Assessed Consumption Details Found !!!");
+						jsonResponse.put("status", "success");
+						jsonResponse.put("dtc_assessedentry_details", jsonarray);
+					}else {
+						jsonResponse.put("message", "Assessed Consumption Details Not Found !!!");
+						jsonResponse.put("status", "error");
+						jsonResponse.put("dtc_assessedentry_details", jsonarray);
+					}
+					
+			}else{
+				jsonResponse.put("status", "error");
+				jsonResponse.put("message", "Invalid Inputs ");
+			}
+		} catch (SQLException e) {
+			System.out.println("Exception thrown " + e);
+			jsonResponse.put("status", "error");
+			jsonResponse.put("message", "Database Query / Runtime Error .");
+		} catch (Exception e) {
+			e.printStackTrace();
+			jsonResponse.put("status", "error");
+			jsonResponse.put("message", " Database Query / Runtime Error.");
+		} finally {
+			DBManagerResourceRelease.close(rs, ps);
+		}
+		
+		return jsonResponse;
 	}	
 
 }

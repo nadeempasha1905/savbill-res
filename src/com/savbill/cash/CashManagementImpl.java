@@ -933,7 +933,7 @@ JSONObject json_response = new JSONObject();
 						request.getServletContext().getRealPath("CashManagementImpl.java"))) {
 						
 					json_response.put("status", "success");
-					json_response.put("message", "Reconcilation done successfully for receipt date : "+receipt_date + " , Shop No : "+recon_rrno );
+					json_response.put("message", "Reconcilation done successfully for receipt date : "+receipt_date + " , RR Number : "+recon_rrno );
 				}else {
 					json_response.put("status", "error");
 					json_response.put("message", "Reconcialtion Unsuccessful !!!");
@@ -1523,6 +1523,754 @@ JSONObject json_response = new JSONObject();
 		}
 		
 		return jsonResponse;
+	}
+
+	@Override
+	public JSONObject getreceiptdetailstocancel(JSONObject object) {
+		// TODO Auto-generated method stub
+		PreparedStatement getreceiptPS = null;
+		ResultSet getreceiptRS = null;
+		JSONObject AckObj = new JSONObject();
+		
+		try {
+				//dbConn=dbObject.getDatabaseConnection();
+			String conn_type = (String)object.get("conn_type");
+			
+			if(conn_type.equalsIgnoreCase("LT")){
+				dbConnection = databaseObj.getDatabaseConnection();
+			}else if(conn_type.equals("HT")){
+				dbConnection = databaseObj.getHTDatabaseConnection();
+			}
+			
+			String query = " select substr(IRP_PURPOSE_KEY,8) rr_number,IRP_PAYEE_NAME payee_name,IRP_AMT_PAID amount_paid,IRP_PYMNT_MD payment_mode,"
+					+ "	   nvl((select CCD_DESCR from CODE_DETL where CCD_CD_VAL = IRP_PYMNT_MD and CCD_CCM_CD_TYP = 'PYMNT_MOD' ),IRP_PYMNT_MD) payment_mode_descr, "
+					+ " 					     IRP_CANCEL_FLG cancel_flag,IRP_STATUS posted_status "
+					+ " 		      from INITIAL_RCPT_PYMNT "
+						 + " where "
+						 //+ " nvl(IRP_CANCEL_FLG,'N') = 'N'"
+						 //+ " and "
+						 + " IRP_CASH_COUNTR_NO = '"+(String)object.get("counter")+"' "
+						 + " and IRP_RCPT_NO = '"+(String)object.get("receiptno")+"' "
+						 + " and IRP_RCPT_DT = to_date('"+(String)object.get("receiptdate")+"','DD/MM/YYYY') "
+						 + " and  IRP_PYMNT_MD = 'C' "
+						 //+ " and IRP_STATUS = '1' " 
+						 ; 
+			
+			System.out.println(query);
+				
+				getreceiptPS = dbConnection.prepareStatement(query);
+				getreceiptRS = getreceiptPS.executeQuery();
+				
+				if(getreceiptRS.next()) {
+					
+					
+					if(getreceiptRS.getString("posted_status").equals("4")) {
+						AckObj.put("message", "Receipt Posted . Cannot Cancel !!!");
+						AckObj.put("status", "success");
+						AckObj.put("sts", "error");
+					}else if(getreceiptRS.getString("cancel_flag").equals("Y")) {
+						AckObj.put("message", "Cannot Cancel . Receipt Already Cancelled !!!");
+						AckObj.put("status", "success");
+						AckObj.put("sts", "error");
+					}else {
+						AckObj.put("message", "Receipt Found !!!");
+						AckObj.put("status", "success");
+					}
+					
+					AckObj.put("shop_number",getreceiptRS.getString("rr_number"));
+					AckObj.put("payee_name", getreceiptRS.getString("payee_name"));
+					AckObj.put("amount_paid", getreceiptRS.getString("amount_paid"));
+					AckObj.put("payment_mode", getreceiptRS.getString("payment_mode"));
+					AckObj.put("payment_mode_descr", getreceiptRS.getString("payment_mode_descr"));
+					AckObj.put("cancel_flag", getreceiptRS.getString("cancel_flag"));
+					AckObj.put("posted_status", getreceiptRS.getString("posted_status"));
+					
+				}else {
+					AckObj.put("status", "fail");
+					AckObj.put("message", "Receipt Not Found !!!");
+					
+				}
+				
+			} catch (Exception e) {
+				AckObj.put("status", "failure");
+				e.printStackTrace();
+				AckObj.put("message", "database not connected");
+			}finally{
+				
+				DBManagerResourceRelease.close(getreceiptRS);
+				DBManagerResourceRelease.close(getreceiptPS);
+			}
+		return AckObj;
+	}
+
+	@Override
+	public JSONObject getchequedetailstocancel(JSONObject object) {
+		// TODO Auto-generated method stub
+		PreparedStatement getreceiptPS = null;
+		ResultSet getreceiptRS = null;
+		JSONObject AckObj = new JSONObject();
+		JSONArray jsonarray = new JSONArray() ;
+		
+		try {
+			//	dbConn=dbObject.getDatabaseConnection();
+			
+			String conn_type = (String)object.get("conn_type");
+			
+			if(conn_type.equalsIgnoreCase("LT")){
+				dbConnection = databaseObj.getDatabaseConnection();
+			}else if(conn_type.equals("HT")){
+				dbConnection = databaseObj.getHTDatabaseConnection();
+			}
+			
+				
+				String query = " SELECT IRP_RCPT_NO RCPT_NO,TO_CHAR(IRP_RCPT_DT,'DD/MM/YYYY') RCPT_DT,IRP_CASH_COUNTR_NO CASH_COUNTR_NO,"
+						     + " SUBSTR(IRP_PURPOSE_KEY,8) RR_NUMBER,IRP_AMT_PAID AMOUNT_PAID,IRP_PAYEE_NAME PAYEE_NAME, "
+						     + " IRP_BCM_CHQ_DD_NO CHEQUE_NUMBER,IRP_BCM_CHQ_DD_DT CHEQUE_DT,IRP_BCM_DRAWN_BANK DRAWN_BANK   "
+						     + " FROM INITIAL_RCPT_PYMNT "
+						     + " WHERE "
+						     + " IRP_BCM_CHQ_DD_NO = '"+(String)object.get("cheque_no")+"' "
+						     + " AND IRP_BCM_CHQ_DD_DT = TO_DATE('"+(String)object.get("cheque_date")+"','DD/MM/YYYY') "
+						  //   + " AND IRP_BCM_DRAWN_BANK = '"+(String)object.get("cheque_drawee_bank")+"'" 
+						     + " AND IRP_STATUS = '1' " 
+						     ;
+						 ; 
+						 
+				String cheque_query =  " SELECT COUNT(*) CNT FROM CHEQUE_MASTER " + 
+									   " WHERE  "
+									   + " BCM_CHQ_DD_NO = '"+(String)object.get("cheque_no")+"' "
+									   + " AND BCM_CHQ_DD_DT = TO_DATE('"+(String)object.get("cheque_date")+"','DD/MM/YYYY')  "
+									   + " AND BCM_CANCEL_FLG = 'Y' "
+									// + " AND BCM_DRAWN_BANK = '"+(String)object.get("cheque_drawee_bank")+"' " 
+									   ;
+				
+				System.out.println(cheque_query);
+				getreceiptPS = dbConnection.prepareStatement(cheque_query);
+				getreceiptRS = getreceiptPS.executeQuery();
+				
+				float total_cheque_amount = 0;
+				int index = 0;
+				String bank = "";
+				if(getreceiptRS.next()) {
+					
+					if(getreceiptRS.getInt("CNT") == 0 ) {
+						
+						getreceiptPS.close();
+						getreceiptRS.close();
+						
+						System.out.println(query);
+						getreceiptPS = dbConnection.prepareStatement(query);
+						getreceiptRS = getreceiptPS.executeQuery();
+						
+						while(getreceiptRS.next()) {
+							
+							JSONObject json = new JSONObject();
+							
+							if(index == 0) {
+								
+								bank = getreceiptRS.getString("DRAWN_BANK");
+								index++;
+							}
+							
+							json.put("RCPT_NO", getreceiptRS.getString("RCPT_NO"));
+							json.put("RCPT_DT", getreceiptRS.getString("RCPT_DT"));
+							json.put("CASH_COUNTR_NO", getreceiptRS.getString("CASH_COUNTR_NO"));
+							json.put("RR_NUMBER", getreceiptRS.getString("RR_NUMBER"));
+							json.put("AMOUNT_PAID", getreceiptRS.getString("AMOUNT_PAID"));
+							json.put("PAYEE_NAME", getreceiptRS.getString("PAYEE_NAME"));
+							json.put("CHEQUE_NUMBER", getreceiptRS.getString("CHEQUE_NUMBER"));
+							json.put("CHEQUE_DT", getreceiptRS.getString("CHEQUE_DT"));
+							json.put("DRAWN_BANK", getreceiptRS.getString("DRAWN_BANK"));
+							
+							total_cheque_amount =  total_cheque_amount +  getreceiptRS.getFloat("AMOUNT_PAID") ;
+							
+							jsonarray.add(json);
+							
+						}
+						
+						if(!jsonarray.isEmpty()) {
+							AckObj.put("message", "Cheque Detail Found !!!");
+							AckObj.put("status", "success");
+							AckObj.put("cheque_list", jsonarray);
+							AckObj.put("cancel_flag", "");
+							AckObj.put("posted_status", "");
+							AckObj.put("posted_status", "total_cheque_amount");
+							AckObj.put("total_cheque_amount", total_cheque_amount+"");
+							AckObj.put("bankname", bank);
+							
+						}else {
+							AckObj.put("status", "fail");
+							AckObj.put("message", "Cheque Not Found !!!");
+							AckObj.put("cheque_list", jsonarray);
+						}
+						
+					}else {
+							AckObj.put("message", "Cannot Cancel . Cheque Already Cancelled !!!");
+							AckObj.put("status", "success");
+							AckObj.put("sts", "error");
+							AckObj.put("cheque_list", jsonarray);
+							AckObj.put("cancel_flag", "Y");
+							AckObj.put("posted_status", "");
+							AckObj.put("total_cheque_amount", total_cheque_amount+"");
+							AckObj.put("bankname", bank);
+							
+					}
+				}else {
+					AckObj.put("message", " Cheque Detail Not Found !!!");
+					AckObj.put("status", "error");
+				}
+
+			} catch (Exception e) {
+				AckObj.put("status", "failure");
+				e.printStackTrace();
+				AckObj.put("message", "database not connected");
+			}finally{
+				
+				DBManagerResourceRelease.close(getreceiptRS);
+				DBManagerResourceRelease.close(getreceiptPS);
+			}
+		return AckObj;
+	}
+
+	@Override
+	public JSONObject docancelreceipts(JSONObject object) {
+		// TODO Auto-generated method stub
+		PreparedStatement getreceiptPS = null;
+		ResultSet getreceiptRS = null;
+		JSONObject AckObj = new JSONObject();
+		
+		try {
+			//	dbConn=dbObject.getDatabaseConnection();
+			String conn_type = (String)object.get("conn_type");
+			
+			if(conn_type.equalsIgnoreCase("LT")){
+				dbConnection = databaseObj.getDatabaseConnection();
+			}else if(conn_type.equals("HT")){
+				dbConnection = databaseObj.getHTDatabaseConnection();
+			}
+			
+				
+				
+				String query =    "  update "
+						        + "  INITIAL_RCPT_PYMNT "
+								+ "	 set IRP_CANCEL_FLG  = 'Y' "
+								+ "  where "
+								+ "  nvl(IRP_CANCEL_FLG,'N') = 'N' " 
+								+ "  and IRP_CASH_COUNTR_NO = '"+(String)object.get("counter")+"' "
+								+ "  and IRP_RCPT_NO = '"+(String)object.get("receiptno")+"'  "
+								+ "  and IRP_RCPT_DT = to_date('"+(String)object.get("receiptdate")+"','DD/MM/YYYY') "
+								+ "  and  IRP_PYMNT_MD = 'C' "
+								+ "  and IRP_STATUS = '1' ";
+				
+				getreceiptPS = dbConnection.prepareStatement(query);
+				int cancel_count = getreceiptPS.executeUpdate();
+				
+				if(cancel_count > 0) {
+					
+					AckObj.put("message", "Receipt Successfully Cancelled for Receipt No : "+(String)object.get("receiptno"));
+					AckObj.put("status", "success");
+					
+				}else {
+					AckObj.put("status", "error");
+					AckObj.put("message", "Cannot Cancel. !!!");
+					
+				}
+				
+			} catch (Exception e) {
+				AckObj.put("status", "failure");
+				e.printStackTrace();
+				AckObj.put("message", "database not connected");
+			}finally{
+				
+				DBManagerResourceRelease.close(getreceiptRS);
+				DBManagerResourceRelease.close(getreceiptPS);
+			}
+		return AckObj;
+	}
+
+	@Override
+	public JSONObject docancelcheques(JSONObject object) {
+		// TODO Auto-generated method stub
+		PreparedStatement getreceiptPS = null;
+		ResultSet getreceiptRS = null;
+		JSONObject AckObj = new JSONObject();
+		
+		try {
+			//	dbConn=dbObject.getDatabaseConnection();
+			String conn_type = (String)object.get("conn_type");
+			
+			if(conn_type.equalsIgnoreCase("LT")){
+				dbConnection = databaseObj.getDatabaseConnection();
+			}else if(conn_type.equals("HT")){
+				dbConnection = databaseObj.getHTDatabaseConnection();
+			}
+			
+				
+			
+			dbConnection.setAutoCommit(false);
+				
+				String query =    " UPDATE CHEQUE_MASTER SET BCM_CANCEL_FLG = 'Y' "
+						+ " WHERE BCM_CHQ_DD_NO = '"+(String)object.get("cheque_no")+"'"
+						+ "  AND BCM_CHQ_DD_DT = TO_DATE('"+(String)object.get("cheque_date")+"','DD/MM/YYYY') "
+						//+ "  AND BCM_DRAWN_BANK = 'NOBANK' "
+						+ "  AND BCM_PYMNT_MD = 'CHQ' "
+						+ "  AND EXISTS "
+						+ "  (SELECT 'X' FROM INITIAL_RCPT_PYMNT "
+						+ "   WHERE IRP_BCM_CHQ_DD_NO = BCM_CHQ_DD_NO AND IRP_BCM_CHQ_DD_DT = BCM_CHQ_DD_DT AND IRP_BCM_DRAWN_BANK = BCM_DRAWN_BANK AND IRP_STATUS = '1')";
+				
+				String rcpt_query = " UPDATE INITIAL_RCPT_PYMNT SET IRP_CANCEL_FLG = 'Y' "
+						          + " WHERE "
+						          + " IRP_BCM_CHQ_DD_NO = '"+(String)object.get("cheque_no")+"' AND "
+						          + " IRP_BCM_CHQ_DD_DT = TO_DATE('"+(String)object.get("cheque_date")+"','DD/MM/YYYY') AND "
+						       //   + " IRP_BCM_DRAWN_BANK = 'NOBANK' AND "
+						          + "  IRP_PYMNT_MD = 'CHQ' AND IRP_STATUS = '1' " ;
+	;
+				
+				
+				
+				getreceiptPS = dbConnection.prepareStatement(query);
+				int cancel_count = getreceiptPS.executeUpdate();
+				
+				if(cancel_count > 0) {
+
+					getreceiptPS.close();
+					
+					getreceiptPS = dbConnection.prepareStatement(rcpt_query);
+					int cheque_cancel_count = getreceiptPS.executeUpdate();
+					
+					if(cheque_cancel_count > 0) {
+						AckObj.put("message", "Cheque Successfully Cancelled for cheque No : "+(String)object.get("cheque_no"));
+						AckObj.put("status", "success");
+						dbConnection.commit();
+					}else {
+						AckObj.put("status", "error");
+						AckObj.put("message", "Cannot Cancel Cheque !!!");
+						try {
+							dbConnection.rollback();
+						} catch (SQLException e1) {
+							// TODO Auto-generated catch block
+							e1.printStackTrace();
+						}
+					}
+				}else {
+					AckObj.put("status", "error");
+					AckObj.put("message", "Cannot Cancel. !!!");
+					try {
+						dbConnection.rollback();
+					} catch (SQLException e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					}
+				}
+			} catch (Exception e) {
+				AckObj.put("status", "failure");
+				try {
+					dbConnection.rollback();
+				} catch (SQLException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+				e.printStackTrace();
+				AckObj.put("message", "database not connected");
+			}finally{
+				
+				DBManagerResourceRelease.close(getreceiptRS);
+				DBManagerResourceRelease.close(getreceiptPS);
+			}
+		return AckObj;
+	}
+
+	@Override
+	public JSONObject uploadmanualreceipts(JSONObject object) {
+		// TODO Auto-generated method stub
+		CallableStatement accountsCS = null;
+		PreparedStatement ps = null;
+		ResultSet rs = null;
+		PreparedStatement ps1 = null;
+		ResultSet rs1 = null;
+		JSONObject jsonResponse = new JSONObject();
+		
+		try {
+			
+			if(!object.isEmpty()){
+				
+				String conn_type = (String)object.get("conn_type");
+				
+				if(conn_type.equals("LT") || conn_type == "LT"){
+					dbConnection = databaseObj.getDatabaseConnection();
+				}else if(conn_type.equals("HT") || conn_type == "HT"){
+					dbConnection = databaseObj.getHTDatabaseConnection();
+				}
+				
+				boolean check_dcb_done = false, check_receipts_uploaded = false;
+				
+				String Query = " SELECT COUNT(1) CNT FROM dual WHERE TO_DATE('"+(String)object.get("receipt_date")+"', 'dd/mm/yyyy') > "+
+		                	   " (SELECT NVL(MAX(LAST_DAY(TO_DATE('01-'||LMS_MONTH,'dd-mon-yyyy'))), "+ 
+		                	   " TO_DATE('"+(String)object.get("receipt_date")+"', 'dd/mm/yyyy')-1) FROM LDGR_MONTH_STS)";
+						
+				
+				System.out.println(Query);
+					ps = dbConnection.prepareStatement(Query) ; 
+					rs = ps.executeQuery();
+					
+					if(rs.next()) {
+						if(rs.getInt("CNT") > 0) {
+							check_dcb_done = true;
+						}
+					}
+					
+				Query = "SELECT COUNT(*) FROM INITIAL_RCPT_PYMNT_HRT "+
+						" WHERE BIR_RCPT_DT = TO_DATE('"+(String)object.get("receipt_date")+"', 'dd/mm/yyyy') "+  
+						" AND BIR_CASH_COUNTR_NO = '"+(String)object.get("counter_number")+"' AND NVL(BIR_UPD_STATUS,'N') = 'Y'";
+				
+				System.out.println(Query);
+					ps1 = dbConnection.prepareStatement(Query) ; 
+					rs1 = ps.executeQuery();
+					
+					if(rs1.next()) {
+						if(rs1.getInt("CNT") > 0) {
+							check_receipts_uploaded = true;
+						}
+					}
+					
+					
+					if(!check_dcb_done) {
+						
+						if(!check_receipts_uploaded) {
+							
+							// Upload Receipts logic to be included.
+							
+						}else {
+							jsonResponse.put("status", "error");
+							jsonResponse.put("message", "Records Already Uploaded for Selected Date and Counter No .");
+						}
+						
+					}else {
+						jsonResponse.put("status", "error");
+						jsonResponse.put("message", "Upload Failed! DCB is already generated for this date.");
+					}
+					
+					
+			}else{
+				jsonResponse.put("status", "error");
+				jsonResponse.put("message", "Invalid Inputs ");
+			}
+		} catch (SQLException e) {
+			System.out.println("Exception thrown " + e);
+			jsonResponse.put("status", "error");
+			jsonResponse.put("message", "Database Query / Runtime Error .");
+		} catch (Exception e) {
+			e.printStackTrace();
+			jsonResponse.put("status", "error");
+			jsonResponse.put("message", " Database Query / Runtime Error.");
+		} finally {
+			DBManagerResourceRelease.close(rs, ps);
+			DBManagerResourceRelease.close(rs1, ps1);
+			//DBManagerResourceRelease.close(rs, ps, dbConnection);
+		}
+		
+		return jsonResponse;
+	}
+
+	@Override
+	public JSONObject getprocessdetails(JSONObject object) {
+		// TODO Auto-generated method stub
+		PreparedStatement getreceiptPS = null;
+		ResultSet getreceiptRS = null;
+		JSONObject AckObj = new JSONObject();
+		JSONArray jsonArray = new JSONArray();
+		
+		try {
+				//dbConn=dbObject.getDatabaseConnection();
+			String conn_type = (String)object.get("conn_type");
+			
+			if(conn_type.equalsIgnoreCase("LT")){
+				dbConnection = databaseObj.getDatabaseConnection();
+			}else if(conn_type.equals("HT")){
+				dbConnection = databaseObj.getHTDatabaseConnection();
+			}
+			
+			String query =  " SELECT COUNT(9)  NO_OF_RR_NO, CM_MTR_RDR_CD,NVL(CB_RR_STS, 'N') CB_RR_STS,"
+					+ " 	TO_CHAR(NVL(DECODE(CB_HHD_BILL_DT,NULL,CB_BILL_DT, CB_HHD_BILL_DT),TO_DATE('01/01/1701','DD/MM/YYYY')),'DD/MM/YYYY') CB_MRI_BILL_DT "
+					+ "		FROM Cust_MASTER, Cust_BILL "
+					+ " 	WHERE CM_MTR_RDG_DAY = "+(String)object.get("readingday")+" AND CB_RR_NO	=	CM_RR_NO AND "
+					+ " 	NVL(CB_RR_STS, 'N') <>'N' AND CM_CONSMR_STS IN ('1','9','10') "
+					+ "		GROUP BY CM_MTR_RDR_CD,CB_RR_STS,NVL(CB_RR_STS, 'N'),"
+					+ "		TO_CHAR(NVL(DECODE(CB_HHD_BILL_DT,NULL,CB_BILL_DT, CB_HHD_BILL_DT),TO_DATE('01/01/1701','DD/MM/YYYY')),'DD/MM/YYYY') "
+					+ " 	ORDER BY CM_MTR_RDR_CD " ; 
+			
+			System.out.println(query);
+				
+				getreceiptPS = dbConnection.prepareStatement(query);
+				getreceiptRS = getreceiptPS.executeQuery();
+				
+				while(getreceiptRS.next()) {
+					
+					JSONObject json = new JSONObject();
+					
+					json.put("NO_OF_RR_NO",getreceiptRS.getString("NO_OF_RR_NO"));
+					json.put("CB_RR_STS", getreceiptRS.getString("CB_RR_STS"));
+					json.put("CB_MRI_BILL_DT", getreceiptRS.getString("CB_MRI_BILL_DT"));
+					json.put("CM_MTR_RDR_CD", getreceiptRS.getString("CM_MTR_RDR_CD"));
+					
+					jsonArray.add(json);
+					
+				}
+				
+				if(!jsonArray.isEmpty()) {
+					AckObj.put("status", "success");
+					AckObj.put("message", "Process Details List");
+					AckObj.put("process_list",jsonArray);
+				}else {
+					AckObj.put("status", "fail");
+					AckObj.put("message", "No Records !!!");
+					AckObj.put("process_list",jsonArray);
+					
+				}
+				
+			} catch (Exception e) {
+				AckObj.put("status", "failure");
+				e.printStackTrace();
+				AckObj.put("message", "database not connected");
+			}finally{
+				
+				DBManagerResourceRelease.close(getreceiptRS);
+				DBManagerResourceRelease.close(getreceiptPS);
+			}
+		return AckObj;
+	}
+
+	@Override
+	public JSONObject getrrnumberdetails(JSONObject object) {
+		// TODO Auto-generated method stub
+		PreparedStatement getreceiptPS = null;
+		ResultSet getreceiptRS = null;
+		PreparedStatement ps = null;
+		ResultSet rs = null;
+		JSONObject AckObj = new JSONObject();
+		JSONArray jsonArray = new JSONArray();
+		
+		try {
+				//dbConn=dbObject.getDatabaseConnection();
+			String conn_type = (String)object.get("conn_type");
+			
+			if(conn_type.equalsIgnoreCase("LT")){
+				dbConnection = databaseObj.getDatabaseConnection();
+			}else if(conn_type.equals("HT")){
+				dbConnection = databaseObj.getHTDatabaseConnection();
+			}
+			
+			boolean validate_dates_sts = false;
+			String validate_dates = " SELECT NVL(ROUND(SYSDATE - TO_DATE('"+(String)object.get("billdate")+"','DD/MM/YYYY'),2),0) FROM dual";
+			
+			ps = dbConnection.prepareStatement(validate_dates);
+			rs = ps.executeQuery();
+			
+			if(rs.next()) {
+				double val =  Double.parseDouble(rs.getString(1)) ;
+				if(val < 1)
+				{
+					validate_dates_sts = false;
+				}
+				else
+				{
+					validate_dates_sts = true;
+				}
+			}
+			
+			if(validate_dates_sts) {
+				String query = "SELECT SUBSTR(CM_RR_NO,8) CM_RR_NO, NVL(CB_RR_STS, 'N') CB_RR_STS,CM_MTR_RDR_CD, "
+						+ "		TO_CHAR(NVL(DECODE(CB_HHD_BILL_DT,NULL,CB_BILL_DT, CB_HHD_BILL_DT),TO_DATE('01/01/1701','DD/MM/YYYY')),'DD/MM/YYYY') CB_MRI_BILL_DT "
+						+ " 	 FROM Cust_MASTER, Cust_BILL "
+						+ " 	 WHERE CM_MTR_RDG_DAY = '"+(((String)object.get("billdate")).split("/"))[0]+"' AND CM_CONSMR_STS IN ('1','9','10') AND "
+						+ "      CM_MTR_RDR_CD = '"+(String)object.get("meterreadercode")+"' AND NVL(CB_RR_STS, 'N') <>'N' AND "
+						+ "     	CB_RR_NO = CM_RR_NO  " ; 
+				
+				System.out.println(query);
+					
+					getreceiptPS = dbConnection.prepareStatement(query);
+					getreceiptRS = getreceiptPS.executeQuery();
+					
+					while(getreceiptRS.next()) {
+						
+						JSONObject json = new JSONObject();
+						
+						json.put("CM_RR_NO",getreceiptRS.getString("CM_RR_NO"));
+						json.put("CB_RR_STS", getreceiptRS.getString("CB_RR_STS"));
+						json.put("CM_MTR_RDR_CD", getreceiptRS.getString("CM_MTR_RDR_CD"));
+						json.put("CB_MRI_BILL_DT", getreceiptRS.getString("CB_MRI_BILL_DT"));
+						
+						jsonArray.add(json);
+						
+					}
+					
+					if(!jsonArray.isEmpty()) {
+						AckObj.put("status", "success");
+						AckObj.put("message", "Process RR Number List");
+						AckObj.put("process_rrnumber_list",jsonArray);
+					}else {
+						AckObj.put("status", "fail");
+						AckObj.put("message", "No Records !!!");
+						AckObj.put("process_rrnumber_list",jsonArray);
+						
+					}
+			}else {
+				AckObj.put("status", "fail");
+				AckObj.put("message", "Cannot Reset Todays And Tommorows Records !!!");
+				AckObj.put("process_rrnumber_list",jsonArray);
+			}
+			
+
+				
+			} catch (Exception e) {
+				AckObj.put("status", "failure");
+				e.printStackTrace();
+				AckObj.put("message", "database not connected");
+			}finally{
+				
+				DBManagerResourceRelease.close(getreceiptRS);
+				DBManagerResourceRelease.close(getreceiptPS);
+			}
+		return AckObj;
+	}
+
+	@Override
+	public JSONObject doprocessmrreset(JSONObject object) {
+		// TODO Auto-generated method stub
+		PreparedStatement ps = null;
+		ResultSet rs = null;
+		JSONObject jsonresponse = new JSONObject();
+		JSONArray jsonArray = new JSONArray();
+		CallableStatement cal = null;
+		
+		try {
+			String conn_type = (String)object.get("conn_type");
+			
+			if(conn_type.equalsIgnoreCase("LT")){
+				dbConnection = databaseObj.getDatabaseConnection();
+			}else if(conn_type.equals("HT")){
+				dbConnection = databaseObj.getHTDatabaseConnection();
+			}
+			
+			if(((String)object.get("status")) != "B") {
+				
+				String update_query = " UPDATE CUST_BILL SET CB_RR_STS='B' " +
+									  " WHERE CB_RR_STS='"+(String)object.get("status") +"' " +
+									  " AND CB_BILL_DT=TO_DATE('"+(String)object.get("bill_date")+"','DD/MM/YYYY') " +
+									  " AND CB_RR_NO IN(SELECT CM_RR_NO FROM CUST_MASTER WHERE CM_MTR_RDR_CD='"+(String)object.get("meter_reader_code")+"' "+"  "
+									  		+ "	AND CM_MTR_RDG_DAY='"+(((String)object.get("bill_date")).split("/"))[0]+"')";
+				
+				System.out.println(update_query);
+				ps = dbConnection.prepareStatement(update_query);
+				int update_result = ps.executeUpdate();
+				
+				if(update_result > 0) {
+					
+					cal=dbConnection.prepareCall("{call PROC_RESET_MR(?,?,?)}");
+					
+					cal.setString(1, ConvertIFNullToString(object.getString("meter_reader_code")));
+					cal.setString(2, ConvertIFNullToString(object.getString("bill_date")));
+					cal.registerOutParameter(3, OracleTypes.VARCHAR);
+					
+					cal.execute();
+					String val = cal.getString(3).toString().trim();
+					if(val.equals("TRUE"))
+					{
+						jsonresponse.put("status", "success");
+						jsonresponse.put("message", "MR Reset is successfull.");
+					}
+					else
+					{
+						jsonresponse.put("status", "error");
+						jsonresponse.put("message", "MR Reset failed !!!");
+					}
+				}else {
+					jsonresponse.put("status", "error");
+					jsonresponse.put("message", "MR Reset failed due to bill-status!!!");
+				}
+			}else {
+				
+			}
+			} catch (Exception e) {
+				jsonresponse.put("status", "failure");
+				e.printStackTrace();
+				jsonresponse.put("message", "database not connected");
+			}finally{
+				
+				DBManagerResourceRelease.close(rs);
+				DBManagerResourceRelease.close(ps);
+				DBManagerResourceRelease.close(cal);
+			}
+		return jsonresponse;
+	}
+
+	@Override
+	public JSONObject doprocessrrreset(JSONObject object) {
+		// TODO Auto-generated method stub
+		PreparedStatement ps = null;
+		ResultSet rs = null;
+		JSONObject jsonresponse = new JSONObject();
+		JSONArray jsonArray = new JSONArray();
+		CallableStatement cal = null;
+		
+		try {
+			String conn_type = (String)object.get("conn_type");
+			
+			if(conn_type.equalsIgnoreCase("LT")){
+				dbConnection = databaseObj.getDatabaseConnection();
+			}else if(conn_type.equals("HT")){
+				dbConnection = databaseObj.getHTDatabaseConnection();
+			}
+			
+			if(((String)object.get("status")) != "B") {
+				
+				String update_query = " UPDATE CUST_BILL  " +
+									  " SET CB_RR_STS='B' " +
+						              " WHERE CB_RR_NO ='"+ (String)object.get("rrno")+"' AND CB_RR_STS='"+(String)object.get("status")+"'";
+				
+				System.out.println(update_query);
+				ps = dbConnection.prepareStatement(update_query);
+				int update_result = ps.executeUpdate();
+				
+				if(update_result > 0) {
+					
+					cal=dbConnection.prepareCall("{call PROC_RESET_RR(?,?,?,?)}");
+					
+					cal.setString(1, ConvertIFNullToString(object.getString("meter_reader_code")));
+					cal.setString(2, ConvertIFNullToString(object.getString("bill_date")));
+					cal.setString(3, ConvertIFNullToString(object.getString("rrno")));
+					cal.registerOutParameter(4, OracleTypes.VARCHAR);
+					
+					cal.execute();
+					String val = cal.getString(4).toString().trim();
+					if(val.equals("TRUE"))
+					{
+						jsonresponse.put("status", "success");
+						jsonresponse.put("message", "RR Reset is successfull.");
+					}
+					else
+					{
+						jsonresponse.put("status", "error");
+						jsonresponse.put("message", "RR Reset failed !!!");
+					}
+				}else {
+					jsonresponse.put("status", "error");
+					jsonresponse.put("message", "RR Reset failed due to updating bill-status!!!");
+				}
+			}else {
+				jsonresponse.put("status", "error");
+				jsonresponse.put("message", "RR Reset failed due to bill-status!!!");
+			}
+			} catch (Exception e) {
+				jsonresponse.put("status", "failure");
+				e.printStackTrace();
+				jsonresponse.put("message", "database not connected");
+			}finally{
+				
+				DBManagerResourceRelease.close(rs);
+				DBManagerResourceRelease.close(ps);
+				DBManagerResourceRelease.close(cal);
+			}
+		return jsonresponse;
 	}
 	
 	

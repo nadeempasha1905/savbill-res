@@ -1638,6 +1638,16 @@ public class RouterServer {
 		return energyauditObj.upsertFeederEnergyAuditDetails(object);
 	}
 	
+	@POST
+	@Path("/getentryrecordsforassessed")
+	@Consumes({MediaType.APPLICATION_JSON})
+	@Produces({MediaType.APPLICATION_JSON})
+	public JSONObject getentryrecordsforassessed(final JSONObject object){
+		
+		return energyauditObj.getentryrecordsforassessed(object);
+	}
+	
+	
 	//Energy Audit Module Services Ends
 	
 /***************************************User*************************************************/	
@@ -2289,6 +2299,87 @@ public class RouterServer {
 		
 	}
 	
+	@POST
+	@Path("/getreceiptdetailstocancel")
+	@Consumes({MediaType.APPLICATION_JSON})
+	@Produces({MediaType.APPLICATION_JSON})
+	public JSONObject getreceiptdetailstocancel(final JSONObject object){
+		
+		return cashObj.getreceiptdetailstocancel(object);
+	}
+	
+	@POST
+	@Path("/getchequedetailstocancel")
+	@Consumes({MediaType.APPLICATION_JSON})
+	@Produces({MediaType.APPLICATION_JSON})
+	public JSONObject getchequedetailstocancel(final JSONObject object){
+		
+		return cashObj.getchequedetailstocancel(object);
+	}
+	
+	@POST
+	@Path("/docancelreceipts")
+	@Consumes({MediaType.APPLICATION_JSON})
+	@Produces({MediaType.APPLICATION_JSON})
+	public JSONObject docancelreceipts(final JSONObject object){
+		
+		return cashObj.docancelreceipts(object);
+	}
+	
+	
+	@POST
+	@Path("/docancelcheques")
+	@Consumes({MediaType.APPLICATION_JSON})
+	@Produces({MediaType.APPLICATION_JSON})
+	public JSONObject docancelcheques(final JSONObject object){
+		
+		return cashObj.docancelcheques(object);
+	}
+	
+	@POST
+	@Path("/uploadmanualreceipts")
+	@Consumes({MediaType.APPLICATION_JSON})
+	@Produces({MediaType.APPLICATION_JSON})
+	public JSONObject uploadmanualreceipts(final JSONObject object){
+		
+		return cashObj.uploadmanualreceipts(object);
+	}
+	
+	@POST
+	@Path("/getprocessdetails")
+	@Consumes({MediaType.APPLICATION_JSON})
+	@Produces({MediaType.APPLICATION_JSON})
+	public JSONObject getprocessdetails(final JSONObject object){
+		
+		return cashObj.getprocessdetails(object);
+	}
+	
+	@POST
+	@Path("/getrrnumberdetails")
+	@Consumes({MediaType.APPLICATION_JSON})
+	@Produces({MediaType.APPLICATION_JSON})
+	public JSONObject getrrnumberdetails(final JSONObject object){
+		
+		return cashObj.getrrnumberdetails(object);
+	}
+	
+	@POST
+	@Path("/doprocessmrreset")
+	@Consumes({MediaType.APPLICATION_JSON})
+	@Produces({MediaType.APPLICATION_JSON})
+	public JSONObject doprocessmrreset(final JSONObject object){
+		
+		return cashObj.doprocessmrreset(object);
+	}
+	
+	@POST
+	@Path("/doprocessrrreset")
+	@Consumes({MediaType.APPLICATION_JSON})
+	@Produces({MediaType.APPLICATION_JSON})
+	public JSONObject doprocessrrreset(final JSONObject object){
+		
+		return cashObj.doprocessrrreset(object);
+	}
 	
 	
 	////////////////

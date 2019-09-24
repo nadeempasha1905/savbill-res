@@ -21,4 +21,13 @@ public interface ICashManagement {
 	JSONObject savereceiptdetailsManaualReceipts(JSONObject object, HttpServletRequest request,
 			HttpServletResponse response);
 	JSONObject getfirstreceiptnumber(JSONObject object, HttpServletRequest request);
+	JSONObject getreceiptdetailstocancel(JSONObject object);
+	JSONObject getchequedetailstocancel(JSONObject object);
+	JSONObject docancelreceipts(JSONObject object);
+	JSONObject docancelcheques(JSONObject object);
+	JSONObject uploadmanualreceipts(JSONObject object);
+	JSONObject getprocessdetails(JSONObject object);
+	JSONObject getrrnumberdetails(JSONObject object);
+	JSONObject doprocessmrreset(JSONObject object);
+	JSONObject doprocessrrreset(JSONObject object);
 }
