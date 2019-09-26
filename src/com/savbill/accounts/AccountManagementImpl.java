@@ -2787,6 +2787,8 @@ public class AccountManagementImpl implements IAccountManagement {
 		ResultSet accountsRS = null;
 		JSONArray array = new JSONArray();
 		JSONObject obj = new JSONObject();
+		PreparedStatement ps = null;
+		ResultSet rs = null;
 		
 		String conn_type = object.getString("conn_type");
 		String location_code = object.getString("location_code");
@@ -2800,55 +2802,88 @@ public class AccountManagementImpl implements IAccountManagement {
 				dbConnection = databaseObj.getHTDatabaseConnection();
 			}
 			
-			accountsCS = dbConnection.prepareCall(DBQueries.GET_METER_DETAILS);
-			accountsCS.setString(1, location_code);
-			accountsCS.setString(2, object.getString("rr_no"));
-			accountsCS.setString(3, object.getString("mtr_sl_no"));
-			accountsCS.setString(4, object.getString("mtr_make"));
-			accountsCS.setString(5, object.getString("mtr_type"));
+			ps = dbConnection.prepareStatement(" Select count(1) cnt from cust_master  where cm_rr_no = '"+object.getString("rr_no")+"'");
+			rs = ps.executeQuery();
 			
-			accountsCS.registerOutParameter(6, OracleTypes.CURSOR);
-			accountsCS.executeUpdate();
-			
-			accountsRS = (ResultSet) accountsCS.getObject(6);
-			
-			while(accountsRS.next()){
-				
-				JSONObject ackobj=new JSONObject();
-				
-				ackobj.put("row_num", accountsRS.getString("row_num"));
-				ackobj.put("rr_no", accountsRS.getString("rr_no"));
-				ackobj.put("mtr_sl_no", accountsRS.getString("mtr_sl_no"));
-				ackobj.put("mtr_make", accountsRS.getString("mtr_make"));
-				ackobj.put("mtr_make_descr", accountsRS.getString("mtr_make_descr"));
-				ackobj.put("mtr_type", accountsRS.getString("mtr_type"));
-				ackobj.put("mtr_type_descr", accountsRS.getString("mtr_type_descr"));
-				ackobj.put("no_of_ph", accountsRS.getString("no_of_ph"));
-				ackobj.put("no_of_ph_descr", accountsRS.getString("no_of_ph_descr"));
-				ackobj.put("mtr_amp", accountsRS.getString("mtr_amp"));
-				ackobj.put("mtr_volt", accountsRS.getString("mtr_volt"));
-				ackobj.put("mtr_volt_descr", accountsRS.getString("mtr_volt_descr"));
-				ackobj.put("mtr_sts", accountsRS.getString("mtr_sts"));
-				ackobj.put("mtr_sts_descr", accountsRS.getString("mtr_sts_descr"));
-				ackobj.put("mtr_rated_dt", accountsRS.getString("mtr_rated_dt"));
-				ackobj.put("mtr_assign_sts", accountsRS.getString("mtr_assign_sts"));
-				ackobj.put("mtr_assign_sts_descr", accountsRS.getString("mtr_assign_sts_descr"));
-				ackobj.put("mra_assigned_dt", accountsRS.getString("mra_assigned_dt"));
-				ackobj.put("mra_release_dt", accountsRS.getString("mra_release_dt"));
-				ackobj.put("remarks", accountsRS.getString("remarks"));
-				ackobj.put("userid", accountsRS.getString("userid"));
-				ackobj.put("tmpstp", accountsRS.getString("tmpstp"));
-
-				array.add(ackobj);
-				
+			boolean cont = false;
+			if(rs.next()) {
+				if(rs.getInt("cnt") > 0) {
+					cont = true;
+				}
 			}
-			if(array.isEmpty()) {
-				obj.put("status", "success");
-				obj.put("message", "No Records Found !!!");
-			} else{
-				obj.put("status", "success");
+			
+			if(cont) {
+				accountsCS = dbConnection.prepareCall(DBQueries.GET_METER_DETAILS);
+				accountsCS.setString(1, location_code);
+				accountsCS.setString(2, object.getString("rr_no"));
+				accountsCS.setString(3, object.getString("mtr_sl_no"));
+				accountsCS.setString(4, object.getString("mtr_make"));
+				accountsCS.setString(5, object.getString("mtr_type"));
+				
+				accountsCS.registerOutParameter(6, OracleTypes.CURSOR);
+				accountsCS.executeUpdate();
+				
+				accountsRS = (ResultSet) accountsCS.getObject(6);
+				
+				while(accountsRS.next()){
+					
+					JSONObject ackobj=new JSONObject();
+					
+					ackobj.put("row_num", accountsRS.getString("row_num"));
+					ackobj.put("rr_no", accountsRS.getString("rr_no"));
+					ackobj.put("mtr_sl_no", accountsRS.getString("mtr_sl_no"));
+					ackobj.put("mtr_make", accountsRS.getString("mtr_make"));
+					ackobj.put("mtr_make_descr", accountsRS.getString("mtr_make_descr"));
+					ackobj.put("mtr_type", accountsRS.getString("mtr_type"));
+					ackobj.put("mtr_type_descr", accountsRS.getString("mtr_type_descr"));
+					ackobj.put("no_of_ph", accountsRS.getString("no_of_ph"));
+					ackobj.put("no_of_ph_descr", accountsRS.getString("no_of_ph_descr"));
+					ackobj.put("mtr_amp", accountsRS.getString("mtr_amp"));
+					ackobj.put("mtr_volt", accountsRS.getString("mtr_volt"));
+					ackobj.put("mtr_volt_descr", accountsRS.getString("mtr_volt_descr"));
+					ackobj.put("mtr_sts", accountsRS.getString("mtr_sts"));
+					ackobj.put("mtr_sts_descr", accountsRS.getString("mtr_sts_descr"));
+					ackobj.put("mtr_rated_dt", accountsRS.getString("mtr_rated_dt"));
+					ackobj.put("mtr_assign_sts", accountsRS.getString("mtr_assign_sts"));
+					ackobj.put("mtr_assign_sts_descr", accountsRS.getString("mtr_assign_sts_descr"));
+					ackobj.put("mra_assigned_dt", accountsRS.getString("mra_assigned_dt"));
+					ackobj.put("mra_release_dt", accountsRS.getString("mra_release_dt"));
+					ackobj.put("r_bkwh", ConvertIFNullToString(accountsRS.getString("r_bkwh")));
+					ackobj.put("r_ckwh", ConvertIFNullToString(accountsRS.getString("r_ckwh")));
+					ackobj.put("r_kva", ConvertIFNullToString(accountsRS.getString("r_kva")));
+					ackobj.put("r_kvah", ConvertIFNullToString(accountsRS.getString("r_kvah")));
+					ackobj.put("r_kvarh", ConvertIFNullToString(accountsRS.getString("r_kvarh")));
+					ackobj.put("r_bmd", ConvertIFNullToString(accountsRS.getString("r_bmd")));
+					ackobj.put("r_bpf", ConvertIFNullToString(accountsRS.getString("r_bpf")));
+					
+					ackobj.put("f_bkwh", ConvertIFNullToString(accountsRS.getString("f_bkwh")));
+					ackobj.put("f_ckwh", ConvertIFNullToString(accountsRS.getString("f_ckwh")));
+					ackobj.put("f_kva", ConvertIFNullToString(accountsRS.getString("f_kva")));
+					ackobj.put("f_kvah", ConvertIFNullToString(accountsRS.getString("f_kvah")));
+					ackobj.put("f_kvarh", ConvertIFNullToString(accountsRS.getString("f_kvarh")));
+					ackobj.put("f_bmd", ConvertIFNullToString(accountsRS.getString("f_bmd")));
+					ackobj.put("f_bpf", ConvertIFNullToString(accountsRS.getString("f_bpf")));
+					
+					ackobj.put("assigned_released_by", ConvertIFNullToString(accountsRS.getString("assigned_released_by")));
+					ackobj.put("remarks", accountsRS.getString("remarks"));
+					ackobj.put("userid", accountsRS.getString("userid"));
+					ackobj.put("tmpstp", accountsRS.getString("tmpstp"));
+
+					array.add(ackobj);
+					
+				}
+				if(array.isEmpty()) {
+					obj.put("status", "info");
+					obj.put("message", "No Records Found !!!");
+				} else{
+					obj.put("status", "success");
+					obj.put("meter_details", array);
+				}
+			}else {
+				obj.put("status", "info");
 				obj.put("meter_details", array);
-			}			
+				obj.put("message", "RR Number does not exists !!!");
+			}
 		}else{
 			obj.put("status", "error");
 			obj.put("message", "Please Enter Valid Input");
@@ -2860,7 +2895,8 @@ public class AccountManagementImpl implements IAccountManagement {
 		}finally
 		{
 			DBManagerResourceRelease.close(accountsRS, accountsCS);
-			//DBManagerResourceRelease.close(accountsRS, accountsCS, dbConnection);
+			DBManagerResourceRelease.close(ps);
+			DBManagerResourceRelease.close(rs);
 		}
 		
 		return obj;
@@ -4962,6 +4998,125 @@ public class AccountManagementImpl implements IAccountManagement {
 			
 		}
 		return true;
+	}
+	
+	public static String ConvertIFNullToString(String value){
+		
+		return ((value == null || value == "") ? "" : value);
+		
+	}
+
+	@Override
+	public JSONObject saveremoveassignmeterdetails(JSONObject object) {
+		// TODO Auto-generated method stub
+		CallableStatement accountsCS = null;
+		ResultSet accountsRS = null;
+		JSONArray array = new JSONArray();
+		JSONObject obj = new JSONObject();
+		PreparedStatement ps = null;
+		ResultSet rs = null;
+		
+		String conn_type = object.getString("conn_type");
+		
+		try {
+				
+			if(conn_type.equalsIgnoreCase("LT")){
+				dbConnection = databaseObj.getDatabaseConnection();
+			}else if(conn_type.equals("HT")){
+				dbConnection = databaseObj.getHTDatabaseConnection();
+			}
+			
+			String qry = "SELECT COUNT(2) cnt " + 
+					"FROM MTR_MASTER,MTR_RR_ASSGN  " + 
+					"WHERE MRA_MTR_SL_NO = MM_MTR_SL_NO " + 
+					"AND MRA_MTR_MAKE = MM_MTR_MAKE " + 
+					"AND MRA_MTR_SL_NO = '"+ object.getString("f_mtr_sl_no")+"' " + 
+					"AND MRA_MTR_MAKE = '"+ object.getString("f_mtr_make")+"' " + 
+					"AND MRA_RELEASE_DT IS NULL";
+			
+			System.out.println(qry);
+			ps = dbConnection.prepareStatement(qry);
+			rs = ps.executeQuery();
+			
+			boolean cont = false;
+			if(rs.next()) {
+				if(rs.getInt("cnt") > 0) {
+					cont = true;
+				}
+			}
+			
+			System.out.println(cont);
+			if(!cont) {
+				
+				accountsCS = dbConnection.prepareCall(DBQueries.SAVE_REMOVE_ASSIGN_METER);
+				accountsCS.registerOutParameter(1, OracleTypes.CURSOR);
+				accountsCS.setString(2,  object.getString("rrno"));
+				accountsCS.setString(3,  object.getString("r_mtr_sl_no"));
+				accountsCS.setString(4,  object.getString("r_mtr_make"));
+				accountsCS.setString(5,  object.getString("r_mtr_type"));
+				accountsCS.setDouble(6,  Double.parseDouble(object.getString("r_no_of_ph")));
+				accountsCS.setString(7,  object.getString("r_mtr_amp"));
+				accountsCS.setString(8,  object.getString("r_mtr_volt"));
+				accountsCS.setString(9,  object.getString("r_mtr_sts"));
+				accountsCS.setString(10, object.getString("r_mra_release_dt"));
+				accountsCS.setDouble(11, Double.parseDouble(object.getString("r_bkwh")));
+				accountsCS.setDouble(12, Double.parseDouble(object.getString("r_ckwh")));
+				accountsCS.setDouble(13, Double.parseDouble(object.getString("r_bmd")));
+				accountsCS.setDouble(14, Double.parseDouble(object.getString("r_bpf")));
+				accountsCS.setString(15, object.getString("r_assigned_released_by"));
+				accountsCS.setString(16, object.getString("r_remarks"));
+				accountsCS.setString(17, object.getString("f_mtr_sl_no"));
+				accountsCS.setString(18, object.getString("f_mtr_make"));
+				accountsCS.setString(19, object.getString("f_mtr_type"));
+				accountsCS.setDouble(20, Double.parseDouble(object.getString("f_no_of_ph")));
+				accountsCS.setString(21, object.getString("f_mtr_amp"));
+				accountsCS.setString(22, object.getString("f_mtr_volt"));
+				accountsCS.setString(23, object.getString("f_mtr_sts"));
+				accountsCS.setString(24, object.getString("f_mra_assigned_dt"));
+				accountsCS.setDouble(25, Double.parseDouble(object.getString("f_bkwh")));
+				accountsCS.setDouble(26, Double.parseDouble(object.getString("f_ckwh")));
+				accountsCS.setDouble(27, Double.parseDouble(object.getString("f_bmd")));
+				accountsCS.setDouble(28, Double.parseDouble(object.getString("f_bpf")));
+				accountsCS.setString(29, object.getString("f_assigned_released_by"));
+				accountsCS.setString(30, object.getString("f_remarks"));
+				accountsCS.setString(31, object.getString("userid"));
+				
+				accountsCS.executeUpdate();
+				
+				accountsRS = (ResultSet) accountsCS.getObject(1);
+				
+				String result = null;
+				if(accountsRS.next()){
+					result = accountsRS.getString("RESP");
+					
+					if(result.equals("success")) {
+						obj.put("status", "success");
+						obj.put("message",accountsRS.getString("MESSAGE"));
+					}else {
+						obj.put("status", "fail");
+						obj.put("message", accountsRS.getString("MESSAGE"));
+					}
+				}else {
+					obj.put("status", "error");
+					obj.put("message", "Database error !!!");
+				}
+				
+			}else {
+				obj.put("status", "info");
+				obj.put("message", "Meter Sl.No Is Already Assigned !!!");
+			}
+		} catch (Exception e) {
+			obj.put("status", "fail");
+			e.printStackTrace();
+			obj.put("message", "database not connected");
+		}finally
+		{
+			DBManagerResourceRelease.close(accountsRS, accountsCS);
+			DBManagerResourceRelease.close(ps);
+			DBManagerResourceRelease.close(rs);
+		}
+		
+		return obj;
 	}
 
 }

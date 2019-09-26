@@ -94,5 +94,6 @@ public interface IAccountManagement {
 	JSONObject dochequedishonour(JSONObject object);
 	JSONObject dovalidaterrnumber(JSONObject object);
 	JSONObject saveadjustmentrecord(JSONObject object, HttpServletRequest request);
+	JSONObject saveremoveassignmeterdetails(JSONObject object);
 	
 }

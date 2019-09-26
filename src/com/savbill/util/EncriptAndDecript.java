@@ -44,7 +44,9 @@ public class EncriptAndDecript {
     }  
     
     public static void main(String[] args) throws Exception {
-
+    	
+    	String enc_value = EncriptAndDecript.encrypt("26/09/2019");
+    	System.out.println(enc_value+"\n"+EncriptAndDecript.decrypt(enc_value));
 	}
 }
   

@@ -1233,6 +1233,15 @@ public class RouterServer {
 	} 
 	
 	@POST
+	@Path("/saveremoveassignmeterdetails")
+	@Consumes({MediaType.APPLICATION_JSON})
+	@Produces({MediaType.APPLICATION_JSON})
+	public JSONObject saveremoveassignmeterdetails(final JSONObject object){
+		
+		return accountsObj.saveremoveassignmeterdetails(object);
+	} 
+	
+	@POST
 	@Path("/getdesignations")
 	@Consumes({MediaType.APPLICATION_JSON})
 	@Produces({MediaType.APPLICATION_JSON})
