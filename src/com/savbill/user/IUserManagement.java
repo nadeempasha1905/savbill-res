@@ -21,4 +21,5 @@ public interface IUserManagement {
 	JSONObject updateUserSessions(JSONObject data);
 	JSONObject getUserDeligationDetails(JSONObject object);
 	JSONObject upsertUserDeligation(JSONObject object);
+	JSONObject changepassword(JSONObject object);
 }

@@ -481,12 +481,25 @@ public class EnergyAuditManagementImpl implements IEnergyAuditManagement {
 				}
 				
 				
-				String Query =  " SELECT TAU_NO_INST,TAU_ASSD_UNITS, TAU_TRF_CATG, TAU_TC_No FROM TRSFMR_ASSED_UNITS  " +
+				/*String Query =  " SELECT TAU_NO_INST,TAU_ASSD_UNITS, TAU_TRF_CATG, TAU_TC_No FROM TRSFMR_ASSED_UNITS  " +
 						" WHERE TAU_TC_No='"+(String)object.get("transformer_code")+"'  AND TAU_BCN_SUBSTN_NO ='"+(String)object.get("station_code")+"' AND" +
 						" TAU_BCN_FDR_NO='"+(String)object.get("feeder_code")+"' AND " +
 					    " TAU_BCN_OM_UNIT='"+(String)object.get("om_code")+"'  AND " + 
 						" TAU_RDG_DT=TO_DATE('"+(String)object.get("reading_date")+"','dd/mm/yyyy' )"+ 
-					    " ORDER BY TAU_TRF_CATG ASC ";
+					    " ORDER BY TAU_TRF_CATG ASC ";*/
+				
+				String Query = " SELECT TACM_CATEGORY_ID CATEGORY_ID, TACM_CATEGORY_NAME CATEGORY, TAU_TC_NO TC_NO, TAU_RDG_DT RDG_DT, TAU_NO_INST NO_INST,TAU_ASSD_UNITS  ASSD_UNITS "
+						     + " FROM TRSFMR_ASSED_CATEGORIES_MASTER "
+						     + " LEFT OUTER JOIN "
+						     + " (SELECT TAU_TRF_CATG, TAU_BCN_SUBSTN_NO, TAU_BCN_FDR_NO, TAU_TC_NO, TAU_RDG_DT, TAU_NO_INST,TAU_ASSD_UNITS "
+						     + " FROM TRSFMR_ASSED_UNITS  "
+						     + " WHERE TAU_BCN_OM_UNIT = '"+(String)object.get("om_code")+"' "
+						     + " AND TAU_BCN_SUBSTN_NO ='"+(String)object.get("station_code")+"' "
+						     + " AND TAU_BCN_FDR_NO = '"+(String)object.get("feeder_code")+"' "
+						     + " AND TAU_TC_NO = '"+(String)object.get("transformer_code")+"' "
+						     + " AND TAU_RDG_DT = TO_DATE('"+(String)object.get("reading_date")+"','DD/MM/YYYY')) T ON T.TAU_TRF_CATG = TACM_CATEGORY_ID "
+						     + " WHERE NVL(TACM_STATUS,'Y') = 'Y' "
+						     + " ORDER BY TACM_DISPLAY_ORDER" ;
 						
 				
 				System.out.println(Query);
@@ -496,10 +509,11 @@ public class EnergyAuditManagementImpl implements IEnergyAuditManagement {
 					while(rs.next()) {
 						JSONObject json = new JSONObject();
 						
-						json.put("no_of_installtions", rs.getString("TAU_NO_INST"));
-						json.put("assessed_units", rs.getString("TAU_ASSD_UNITS"));
-						json.put("transformer_no", rs.getString("TAU_TC_No"));
-						json.put("tariff_category", rs.getString("TAU_TRF_CATG"));
+						json.put("no_of_installtions", ConvertIFNullToString(rs.getString("NO_INST")));
+						json.put("assessed_units",     ConvertIFNullToString(rs.getString("ASSD_UNITS")));
+						json.put("transformer_no",     ConvertIFNullToString(rs.getString("TC_NO")));
+						json.put("tariff_category",    ConvertIFNullToString(rs.getString("CATEGORY")));
+						json.put("tariff_category_id", ConvertIFNullToString(rs.getString("CATEGORY_ID")));
 						
 						jsonarray.add(json);
 					}
@@ -532,5 +546,65 @@ public class EnergyAuditManagementImpl implements IEnergyAuditManagement {
 		
 		return jsonResponse;
 	}	
+	
+	public static String ConvertIFNullToString(String value){
+		
+		return ((value == null || value == "") ? "" : value);
+		
+	}
+
+	@Override
+	public JSONObject save_assessed_consumption_details(JSONObject object) {
+		// TODO Auto-generated method stub
+		CallableStatement accountsCS = null;
+		PreparedStatement ps = null;
+		ResultSet rs = null;
+		JSONObject jsonResponse = new JSONObject();
+		JSONArray jsonarray = new JSONArray();
+		
+		try {
+			
+			if(!object.isEmpty()){
+				
+				String conn_type = (String)object.get("conn_type");
+				
+				if(conn_type.equals("LT") || conn_type == "LT"){
+					dbConnection = databaseObj.getDatabaseConnection();
+				}else if(conn_type.equals("HT") || conn_type == "HT"){
+					dbConnection = databaseObj.getHTDatabaseConnection();
+				}
+				
+				JSONArray assessed_consmp = object.getJSONArray("assessedconsumptiondetails");
+				
+				if(assessed_consmp.isEmpty()) {
+					jsonResponse.put("status", "error");
+					jsonResponse.put("message", "Consumption Details Are Empty !!! ");					
+				}else {
+					
+					for(int i = 0 ; i<assessed_consmp.size();i++) {
+						
+						JSONObject json_temp =	(JSONObject) assessed_consmp.get(i);
+						
+						System.out.println(json_temp.get("tariff_category"));
+					}
+				}				
+			}else{
+				jsonResponse.put("status", "error");
+				jsonResponse.put("message", "Invalid Inputs ");
+			}
+		} catch (SQLException e) {
+			System.out.println("Exception thrown " + e);
+			jsonResponse.put("status", "error");
+			jsonResponse.put("message", "Database Query / Runtime Error .");
+		} catch (Exception e) {
+			e.printStackTrace();
+			jsonResponse.put("status", "error");
+			jsonResponse.put("message", " Database Query / Runtime Error.");
+		} finally {
+			DBManagerResourceRelease.close(rs, ps);
+		}
+		
+		return jsonResponse;
+	}
 
 }

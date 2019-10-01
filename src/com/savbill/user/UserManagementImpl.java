@@ -68,10 +68,33 @@ public class UserManagementImpl implements IUserManagement{
 						json.put("delegate_from_date", validateUserIDRS.getString("delegate_from_date"));
 						json.put("delegate_to_date", validateUserIDRS.getString("delegate_to_date"));
 						json.put("connection_type", validateUserIDRS.getString("setup"));
+						json.put("delegated_to_user", validateUserIDRS.getString("delegated_to_user"));
 						AckObj.put("status", "success");
 						AckObj.put("user_details", json);
 						AckObj.put("message", "UserId exists, proceed to further steps");
-					}else{
+					}
+					else if(resp.equalsIgnoreCase("success_delegated")) {
+						json.put("user_id", validateUserIDRS.getString("user_id"));
+						json.put("name", validateUserIDRS.getString("user_name"));
+						json.put("actual_role", validateUserIDRS.getString("user_actual_role"));
+						json.put("role", validateUserIDRS.getString("user_role"));
+						json.put("location_code", validateUserIDRS.getString("user_location_code"));
+						json.put("subDivision", validateUserIDRS.getString("user_sub_division"));
+						json.put("division", validateUserIDRS.getString("user_division"));
+						json.put("circle", validateUserIDRS.getString("user_circle"));
+						json.put("zone", validateUserIDRS.getString("user_zone"));
+						json.put("company", validateUserIDRS.getString("user_company"));
+						json.put("delegated_user_id", validateUserIDRS.getString("delegate_from_user_id"));
+						json.put("delegated_user_name", validateUserIDRS.getString("delegate_from_user_name"));
+						json.put("delegate_from_date", validateUserIDRS.getString("delegate_from_date"));
+						json.put("delegate_to_date", validateUserIDRS.getString("delegate_to_date"));
+						json.put("connection_type", validateUserIDRS.getString("setup"));
+						json.put("delegated_to_user", validateUserIDRS.getString("delegated_to_user"));
+						AckObj.put("status", "error");
+						AckObj.put("user_details", json);
+						AckObj.put("message", "Cannot Proceed. User Role is Delegated to "+validateUserIDRS.getString("delegated_to_user"));
+					}
+					else{
 						AckObj.put("status", "error");
 						AckObj.put("message", "Invalid User ID, Please enter a valid UserId.");
 					}
@@ -136,6 +159,7 @@ public class UserManagementImpl implements IUserManagement{
 						AckObj.put("Username", username);
 						AckObj.put("status", "success");
 						AckObj.put("menus", getUserMenus(userRole,connType));
+						AckObj.put("sav_menus", getSAV_menus(userRole,connType));
 						AckObj.put("message", "User Authentication Succes.");
 						
 						jsonLogin.put("Username", username);
@@ -174,6 +198,60 @@ public class UserManagementImpl implements IUserManagement{
 		return AckObj;
 				
 	}
+	
+	JSONArray getSAV_menus(String userrole,String conn_type) {	
+		
+	CallableStatement userCS = null;
+	ResultSet userRS = null;
+	JSONArray array = new JSONArray();
+	JSONObject obj = new JSONObject();
+	
+	try {
+		if(conn_type.equalsIgnoreCase("LT")){
+			dbConnection = databaseObj.getDatabaseConnection();
+		}else if(conn_type.equals("HT")){
+			dbConnection = databaseObj.getHTDatabaseConnection();
+		}
+		userCS=dbConnection.prepareCall(DBQueries.GET_SAV_MENUS);
+		userCS.registerOutParameter(1, OracleTypes.CURSOR);
+		userCS.setString(2, userrole);
+		userCS.executeUpdate();
+		userRS = (ResultSet) userCS.getObject(1);
+		
+		while(userRS.next()){
+			
+			JSONObject ackobj=new JSONObject();
+			
+			ackobj.put("form_code", ConvertIFNullToString(userRS.getString("form_code")));
+			ackobj.put("form_id", ConvertIFNullToString(userRS.getString("form_id")));
+			ackobj.put("form_name", ConvertIFNullToString(userRS.getString("form_name")));
+			ackobj.put("form_description", ConvertIFNullToString(userRS.getString("form_description")));
+			ackobj.put("group_name", ConvertIFNullToString(userRS.getString("group_name")));
+			ackobj.put("menu_type", ConvertIFNullToString(userRS.getString("menu_type")));
+			ackobj.put("form_privileges", ConvertIFNullToString(userRS.getString("form_privileges")));
+
+			array.add(ackobj);
+			
+		}
+	} catch (Exception e) {
+		obj.put("status", "fail");
+		e.printStackTrace();
+		obj.put("message", "database not connected");
+	}finally
+	{
+		DBManagerResourceRelease.close(userRS, userCS);
+	}
+	
+	return array;
+	
+	}
+	
+public static String ConvertIFNullToString(String value){
+		
+		return ((value == null || value == "") ? "" : value);
+		
+	}
+
 
 	@Override
 	public JSONObject getUserMenus(String userRole, String connType) {
@@ -507,6 +585,7 @@ public class UserManagementImpl implements IUserManagement{
 						AckObj.put("SESSION_ID", sessionID);
 						AckObj.put("status", "success");
 						AckObj.put("menus", getUserMenus(userRole,connType));
+						AckObj.put("sav_menus", getSAV_menus(userRole,connType));
 						AckObj.put("message", "User Authentication Succes.");
 						
 						return AckObj;
@@ -1022,17 +1101,16 @@ public class UserManagementImpl implements IUserManagement{
 				
 				ackobj.put("row_num", userRS.getString("row_num"));
 				ackobj.put("user_id", userRS.getString("user_id"));
-				ackobj.put("user_descr", userRS.getString("user_id"));
 				ackobj.put("user_name", userRS.getString("user_name"));
-				ackobj.put("user_role", userRS.getString("user_role"));
+				ackobj.put("user_desgn", userRS.getString("user_desgn"));
+				ackobj.put("deligated_by", userRS.getString("deligated_by"));
+				ackobj.put("deligated_user_name", userRS.getString("deligated_user_name"));
+				ackobj.put("deligated_role", userRS.getString("deligated_role"));
 				ackobj.put("from_dt", userRS.getString("from_dt"));
 				ackobj.put("to_dt", userRS.getString("to_dt"));
-				ackobj.put("deligated_role", userRS.getString("deligated_role"));
-				ackobj.put("deligated_by", userRS.getString("deligated_by"));
 				ackobj.put("deligated_on", userRS.getString("deligated_on"));
 				ackobj.put("deligation_updated_on", userRS.getString("deligation_updated_on"));
-
-
+				
 				array.add(ackobj);
 				
 			}
@@ -1081,18 +1159,19 @@ public class UserManagementImpl implements IUserManagement{
 					
 					userCS.setString(1, (String) object.get("option"));
 					userCS.setString(2, location_code);
-					userCS.setString(3, (String) object.get("user_id"));
-					userCS.setString(4, (String) object.get("user_name"));
-					userCS.setString(5, (String) object.get("user_role"));
-					userCS.setString(6, (String) object.get("deligated_by"));
-					userCS.setString(7, (String) object.get("from_dt"));
-					userCS.setString(8, (String) object.get("to_dt"));
+					userCS.setString(3, (String) object.get("to_userid"));
+					userCS.setString(4, (String) object.get("to_username"));
+					userCS.setString(5, (String) object.get("to_userrole"));
+					userCS.setString(6, (String) object.get("delegated_userid"));
+					userCS.setString(7, (String) object.get("delegated_username"));
+					userCS.setString(8, (String) object.get("delegated_userrole"));
+					userCS.setString(9, (String) object.get("fromdate"));
+					userCS.setString(10, (String) object.get("todate"));
 					
-					
-					userCS.registerOutParameter(9, OracleTypes.CURSOR);
+					userCS.registerOutParameter(11, OracleTypes.CURSOR);
 					userCS.executeUpdate();
 					
-					userRS = (ResultSet) userCS.getObject(9);
+					userRS = (ResultSet) userCS.getObject(11);
 					
 					if(userRS.next()){
 						String RESP = userRS.getString("RESP");
@@ -1100,10 +1179,10 @@ public class UserManagementImpl implements IUserManagement{
 						
 						if(RESP.equalsIgnoreCase("success")){
 							obj.put("status", "success");
-							obj.put("message", " User Deligation "+(db_option.equals("ADD") ? "  Added " : "  Updated")+" successfully");
+							obj.put("message", " User Deligation "+(db_option.equalsIgnoreCase("ADD") ? "  Added " : "  Updated")+" successfully");
 						}else if (RESP.equalsIgnoreCase("fail")) {
 							obj.put("status", "error");
-							obj.put("message", " User Deligation  "+ (db_option.equals("ADD") ? " Insertion " : "Updation") + "  failed.");
+							obj.put("message", " User Deligation  "+ (db_option.equalsIgnoreCase("ADD") ? " Insertion " : "Updation") + "  failed.");
 						}else {
 							obj.put("status", "error");
 							obj.put("message", userRS.getString("RESP"));
@@ -1124,6 +1203,70 @@ public class UserManagementImpl implements IUserManagement{
 		}
 		
 		return obj;
+	}
+
+	@Override
+	public JSONObject changepassword(JSONObject object) {
+		// TODO Auto-generated method stub
+		CallableStatement chkLoginUsersCS = null;
+		ResultSet chkLoginUsersRS = null;
+		JSONObject AckObj = new JSONObject();
+				
+		String old_encryptedpassword = null;
+		String new_encryptedpassword = null;
+		
+		String conn_type = (String) object.get("conn_type");
+		
+		try {
+				old_encryptedpassword = EncriptAndDecript.encrypt((String) object.get("old_password"));
+				new_encryptedpassword = EncriptAndDecript.encrypt((String) object.get("new_password"));
+				
+				System.out.println(old_encryptedpassword);
+				System.out.println(new_encryptedpassword);
+				
+				//dbConnection = DatabaseImpl.GetLTSQLConnection();
+				if(conn_type.equals("LT")){
+					dbConnection=databaseObj.getDatabaseConnection();
+				}else if(conn_type.equals("HT")){
+					dbConnection=databaseObj.getHTDatabaseConnection();
+				}
+				
+				chkLoginUsersCS = dbConnection.prepareCall(DBQueries.CHANGE_PASSWORD);
+				chkLoginUsersCS.registerOutParameter(1, OracleTypes.CURSOR);
+				chkLoginUsersCS.setString(2,(String) object.get("userid"));
+				chkLoginUsersCS.setString(3,old_encryptedpassword);
+				chkLoginUsersCS.setString(4,new_encryptedpassword);
+				chkLoginUsersCS.setString(5,(String) object.get("userid"));
+				chkLoginUsersCS.executeUpdate();
+				chkLoginUsersRS = (ResultSet) chkLoginUsersCS.getObject(1);
+				
+				if(chkLoginUsersRS.next()) {
+					String resp = chkLoginUsersRS.getString("RESP");
+					
+					if(resp.equalsIgnoreCase("success")){
+						AckObj.put("status", "success");
+						AckObj.put("message", chkLoginUsersRS.getString("MESSAGE"));
+					} else {
+						AckObj.put("status", "error");					
+						AckObj.put("message", chkLoginUsersRS.getString("MESSAGE"));	
+					}
+				} else {
+					AckObj.put("status", "error");					
+					AckObj.put("message", "Password Change Unscuccessful.");	
+				}
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+			AckObj.put("status", "failure");
+			
+			AckObj.put("message", "database not connected");
+		}finally
+		{
+			DBManagerResourceRelease.close(chkLoginUsersRS, chkLoginUsersCS);
+		}
+		
+		return AckObj;
+				
 	}
 
 }

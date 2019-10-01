@@ -11,5 +11,6 @@ public interface IEnergyAuditManagement {
 	JSONObject getFeederEnergyAuditDetails(JSONObject object);
 	JSONObject upsertFeederEnergyAuditDetails(JSONObject data);
 	JSONObject getentryrecordsforassessed(JSONObject object);
+	JSONObject save_assessed_consumption_details(JSONObject object);
 
 }

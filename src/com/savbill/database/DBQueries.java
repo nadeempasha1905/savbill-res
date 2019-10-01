@@ -259,6 +259,9 @@ public class DBQueries {
 	//User Module procedures 
 	public static final String VERIFY_USER_ID = "{call PKG_USER.VERIFY_USER_ID(?,?)}";
 	public static final String AUTHENTICATE_USER = "{call PKG_USER.AUTHENTICATE_USER(?,?,?)}";
+	public static final String CHANGE_PASSWORD = "{call PKG_USER.CHANGE_USER_PASSWORD(?,?,?,?,?)}";
+	
+	public static final String GET_SAV_MENUS = "{call GET_MENUS_BY_USERID(?,?)}";
 	
 	public static final String GET_USER_ROLE_DETLS = "{call PKG_USER.GET_USER_ROLE_DETLS(?)}";
 	public static final String UPSERT_USER_ROLE_DETAILS = "{call PKG_USER.UPSERT_USER_ROLE_DETAILS(?,?,?,?,?)}";
@@ -268,7 +271,7 @@ public class DBQueries {
 	public static final String GET_USER_SESSION_DETAILS = "{call PKG_USER.GET_USER_SESSION_DETAILS(?,?)}";
 	public static final String UPDATE_USER_SESSION = "{call PKG_USER.UPDATE_USER_SESSION(?,?)}";
 	public static final String GET_USER_DELIGATION_DETAILS = "{call PKG_USER.GET_USER_DELIGATION_DETAILS(?,?)}";
-	public static final String UPSERT_USER_DELIGATION = "{call PKG_USER.UPSERT_USER_DELIGATION(?,?,?,?,?,?,?,?,?)}";
+	public static final String UPSERT_USER_DELIGATION = "{call PKG_USER.UPSERT_USER_DELIGATION(?,?,?,?,?,?,?,?,?,?,?)}";
 	
 	
 	//User Module Ends 

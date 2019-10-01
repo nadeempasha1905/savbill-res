@@ -1656,6 +1656,15 @@ public class RouterServer {
 		return energyauditObj.getentryrecordsforassessed(object);
 	}
 	
+	@POST
+	@Path("/save_assessed_consumption_details")
+	@Consumes({MediaType.APPLICATION_JSON})
+	@Produces({MediaType.APPLICATION_JSON})
+	public JSONObject save_assessed_consumption_details(final JSONObject object){
+		
+		return energyauditObj.save_assessed_consumption_details(object);
+	}
+	
 	
 	//Energy Audit Module Services Ends
 	
@@ -1778,6 +1787,15 @@ public class RouterServer {
 	public JSONObject upsertUserDeligation(final JSONObject object){
 		
 		return userObj.upsertUserDeligation(object);
+	}
+	
+	@POST
+	@Path("/changepassword")
+	@Consumes({MediaType.APPLICATION_JSON})
+	@Produces({MediaType.APPLICATION_JSON})
+	public JSONObject changepassword(final JSONObject object){
+		
+		return userObj.changepassword(object);
 	}
 	
 	
