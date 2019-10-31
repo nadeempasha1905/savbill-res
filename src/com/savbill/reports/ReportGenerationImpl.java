@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.sql.CallableStatement;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.HashMap;
 import java.util.ResourceBundle;
@@ -23,6 +24,7 @@ import org.apache.commons.io.IOUtils;
 
 import com.savbill.database.DBManagerIMPL;
 import com.savbill.database.DBQueries;
+import com.savbill.util.ReferenceUtil;
 
 import net.sf.jasperreports.engine.JRException;
 import net.sf.jasperreports.engine.JRExporterParameter;
@@ -67,6 +69,7 @@ public class ReportGenerationImpl implements IReportGeneration {
 	
 	ResourceBundle propsBundle=ResourceBundle.getBundle("savbilldb");
 	String REPORT_PATH = propsBundle.getString("REPORT_PATH");
+	String REPORT_IMAGE_LOGO_NAME = propsBundle.getString("REPORT_IMAGE_LOGO_NAME");
 
 	@Override
 	public JSONObject generateBillingEfficiency(HttpServletRequest request, HttpServletResponse response,
@@ -232,7 +235,7 @@ public class ReportGenerationImpl implements IReportGeneration {
 				/*String imgPath = "";
 					imgPath = request.getServletContext().getRealPath("app/images/mescom_logo.jpg");*/
 				
-				String imgPath = REPORT_PATH + "mescom_logo.jpg";
+				String imgPath = REPORT_PATH + REPORT_IMAGE_LOGO_NAME;
 				//imgPath = request.getServletContext().getRealPath("app/images/mescom_logo.jpg");
 				
 					
@@ -904,6 +907,449 @@ public class ReportGenerationImpl implements IReportGeneration {
 
 		return obj;
 	
+	}
+
+	@Override
+	public JSONObject getotherreportstypelist(HttpServletRequest request, HttpServletResponse response,
+			JSONObject object) {
+		// TODO Auto-generated method stub
+
+		// TODO Auto-generated method stub
+		        PreparedStatement ps = null;
+				ResultSet accountsRS = null;
+				JSONArray array = new JSONArray();
+				JSONObject obj = new JSONObject();
+
+				String conn_type = object.getString("conn_type");
+				
+				System.out.println(object);
+
+				try {
+
+					if (conn_type.equalsIgnoreCase("LT")) {
+
+						dbConnection = databaseObj.getDatabaseConnection();
+
+					} else if (conn_type.equals("HT")) {
+						dbConnection = databaseObj.getHTDatabaseConnection();
+					}
+
+					//accountsCS = dbConnection.prepareCall(DBQueries.REPORT_GET_BILLING_EFFICIENCY);
+					ps = dbConnection.prepareStatement("SELECT *  FROM OTH_REPORTS WHERE OR_STS = 'Y' ORDER BY OR_ORDER ");
+					accountsRS = ps.executeQuery();
+					System.out.println(accountsRS);
+					while (accountsRS.next()) {
+						JSONObject ackobj = new JSONObject();
+
+						ackobj.put("key", accountsRS.getString("OR_ID"));
+						ackobj.put("value", accountsRS.getString("OR_NAME"));
+						ackobj.put("filename", accountsRS.getString("OR_REPORT_FILENAME"));
+
+						array.add(ackobj);
+
+					}
+					if (array.isEmpty()) {
+						// no tasks for user
+						obj.put("status", "success");
+						obj.put("message", "No Records Found !!!");
+					} else {
+						obj.put("status", "success");
+						obj.put("message", "Other Reports List  !!!");
+						obj.put("OTHER_REPORT_LIST", array);
+					}
+
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					obj.put("status", "fail");
+					e.printStackTrace();
+					obj.put("message", "database not connected");
+				}
+
+				return obj;
+	}
+
+	@Override
+	public JSONObject getledgernolist(HttpServletRequest request, HttpServletResponse response, JSONObject object) {
+		// TODO Auto-generated method stub
+		PreparedStatement ps = null;
+		ResultSet accountsRS = null;
+		JSONArray array = new JSONArray();
+		JSONObject obj = new JSONObject();
+
+		String conn_type = object.getString("conn_type");
+		String location_code = object.getString("location_code");
+		
+		System.out.println(object);
+
+		try {
+
+			if (conn_type.equalsIgnoreCase("LT")) {
+
+				dbConnection = databaseObj.getDatabaseConnection();
+
+			} else if (conn_type.equals("HT")) {
+				dbConnection = databaseObj.getHTDatabaseConnection();
+			}
+
+			//accountsCS = dbConnection.prepareCall(DBQueries.REPORT_GET_BILLING_EFFICIENCY);
+			ps = dbConnection.prepareStatement("SELECT DISTINCT CM_LDGR_NO FROM Cust_MASTER where CM_RR_NO like '"+location_code+"%' order by 1 ");
+			accountsRS = ps.executeQuery();
+			System.out.println(accountsRS);
+			while (accountsRS.next()) {
+				JSONObject ackobj = new JSONObject();
+
+				ackobj.put("key", accountsRS.getString("CM_LDGR_NO"));
+				ackobj.put("value", accountsRS.getString("CM_LDGR_NO"));
+
+				array.add(ackobj);
+
+			}
+			if (array.isEmpty()) {
+				// no tasks for user
+				obj.put("status", "success");
+				obj.put("message", "No Records Found !!!");
+			} else {
+				obj.put("status", "success");
+				obj.put("message", "Ledger No List  !!!");
+				obj.put("LEDGER_NO_LIST", array);
+			}
+
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			obj.put("status", "fail");
+			e.printStackTrace();
+			obj.put("message", "database not connected");
+		}
+
+		return obj;
+	}
+
+	@Override
+	public JSONObject getexceptionreportstypelist(HttpServletRequest request, HttpServletResponse response,
+			JSONObject object) {
+		// TODO Auto-generated method stub
+		 PreparedStatement ps = null;
+			ResultSet accountsRS = null;
+			JSONArray array = new JSONArray();
+			JSONObject obj = new JSONObject();
+
+			String conn_type = object.getString("conn_type");
+			
+			System.out.println(object);
+
+			try {
+
+				if (conn_type.equalsIgnoreCase("LT")) {
+
+					dbConnection = databaseObj.getDatabaseConnection();
+
+				} else if (conn_type.equals("HT")) {
+					dbConnection = databaseObj.getHTDatabaseConnection();
+				}
+
+				//accountsCS = dbConnection.prepareCall(DBQueries.REPORT_GET_BILLING_EFFICIENCY);
+				ps = dbConnection.prepareStatement("SELECT * FROM code_detl WHERE CCD_CCM_CD_TYP = 'EXCP_RPT' AND CCD_CD_VAL NOT IN('6','20','18') AND CCD_DELETE_FLG = 'N' ");
+				accountsRS = ps.executeQuery();
+				System.out.println(accountsRS);
+				while (accountsRS.next()) {
+					JSONObject ackobj = new JSONObject();
+
+					ackobj.put("key", accountsRS.getString("CCD_CD_VAL"));
+					ackobj.put("value", accountsRS.getString("CCD_DESCR"));
+				//	ackobj.put("filename", accountsRS.getString("OR_REPORT_FILENAME"));
+
+					array.add(ackobj);
+
+				}
+				if (array.isEmpty()) {
+					// no tasks for user
+					obj.put("status", "success");
+					obj.put("message", "No Records Found !!!");
+				} else {
+					obj.put("status", "success");
+					obj.put("message", "Exception Reports List  !!!");
+					obj.put("EXCEPTION_REPORT_LIST", array);
+				}
+
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				obj.put("status", "fail");
+				e.printStackTrace();
+				obj.put("message", "database not connected");
+			}
+
+			return obj;
+	}
+
+	@Override
+	public JSONObject getexceptionreports_camplist(JSONObject object) {
+		// TODO Auto-generated method stub
+
+		 PreparedStatement ps = null;
+			ResultSet accountsRS = null;
+			JSONArray array = new JSONArray();
+			JSONObject obj = new JSONObject();
+
+			String conn_type = object.getString("conn_type");
+			
+			System.out.println(object);
+
+			try {
+
+				if (conn_type.equalsIgnoreCase("LT")) {
+					dbConnection = databaseObj.getDatabaseConnection();
+				} else if (conn_type.equals("HT")) {
+					dbConnection = databaseObj.getHTDatabaseConnection();
+				}
+
+				ps = dbConnection.prepareStatement(" SELECT DISTINCT NVL(CD_CORRES_ADDR4, '') CD_CORRES_ADDR4 FROM CUST_DESCR where CD_RR_NO like '"+ object.getString("location_code")+"%' ORDER BY 1 ");
+				accountsRS = ps.executeQuery();
+				System.out.println(accountsRS);
+				while (accountsRS.next()) {
+					JSONObject ackobj = new JSONObject();
+
+				//	System.out.println(accountsRS.getString("CD_CORRES_ADDR4"));
+					ackobj.put("key", ReferenceUtil.ConvertIFNullToString(accountsRS.getString("CD_CORRES_ADDR4")));
+					ackobj.put("value",ReferenceUtil.ConvertIFNullToString( accountsRS.getString("CD_CORRES_ADDR4")));
+				//	ackobj.put("filename", accountsRS.getString("OR_REPORT_FILENAME"));
+
+					array.add(ackobj);
+
+				}
+				if (array.isEmpty()) {
+					// no tasks for user
+					obj.put("status", "success");
+					obj.put("message", "No Records Found !!!");
+				} else {
+					obj.put("status", "success");
+					obj.put("message", "Camp List  !!!");
+					obj.put("CAMP_LIST", array);
+				}
+
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				obj.put("status", "fail");
+				e.printStackTrace();
+				obj.put("message", "database not connected");
+			}
+
+			return obj;
+	}
+
+	@Override
+	public JSONObject getuseridlist_billcancelreport(JSONObject object) {
+		// TODO Auto-generated method stub
+		 PreparedStatement ps = null;
+			ResultSet accountsRS = null;
+			JSONArray array = new JSONArray();
+			JSONObject obj = new JSONObject();
+
+			String conn_type = object.getString("conn_type");
+			
+			System.out.println(object);
+
+			try {
+
+				if (conn_type.equalsIgnoreCase("LT")) {
+					dbConnection = databaseObj.getDatabaseConnection();
+				} else if (conn_type.equals("HT")) {
+					dbConnection = databaseObj.getHTDatabaseConnection();
+				}
+
+				ps = dbConnection.prepareStatement(" SELECT DISTINCT(USR_ID) as ID FROM cloudbill_USER WHERE USR_STS = 'Y' and usr_loc = '"+ object.getString("location_code")+"' ORDER BY 1 ");
+				accountsRS = ps.executeQuery();
+				System.out.println(accountsRS);
+				while (accountsRS.next()) {
+					JSONObject ackobj = new JSONObject();
+
+				//	System.out.println(accountsRS.getString("CD_CORRES_ADDR4"));
+					ackobj.put("key", ReferenceUtil.ConvertIFNullToString(accountsRS.getString("ID")));
+					ackobj.put("value",ReferenceUtil.ConvertIFNullToString( accountsRS.getString("ID")));
+				//	ackobj.put("filename", accountsRS.getString("OR_REPORT_FILENAME"));
+
+					array.add(ackobj);
+
+				}
+				if (array.isEmpty()) {
+					// no tasks for user
+					obj.put("status", "success");
+					obj.put("message", "No Records Found !!!");
+				} else {
+					obj.put("status", "success");
+					obj.put("message", "User-Id List  !!!");
+					obj.put("USERID_LIST", array);
+				}
+
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				obj.put("status", "fail");
+				e.printStackTrace();
+				obj.put("message", "database not connected");
+			}
+
+			return obj;
+	}
+
+	@Override
+	public JSONObject getcredittypelist(JSONObject object) {
+		// TODO Auto-generated method stub
+		 PreparedStatement ps = null;
+			ResultSet accountsRS = null;
+			JSONArray array = new JSONArray();
+			JSONObject obj = new JSONObject();
+
+			String conn_type = object.getString("conn_type");
+			
+			System.out.println(object);
+
+			try {
+
+				if (conn_type.equalsIgnoreCase("LT")) {
+					dbConnection = databaseObj.getDatabaseConnection();
+				} else if (conn_type.equals("HT")) {
+					dbConnection = databaseObj.getHTDatabaseConnection();
+				}
+
+				ps = dbConnection.prepareStatement(" SELECT RCPT_DETL_KEY, NVL(RCPT_DESCR, '') RCPT_DESCR  FROM DETL_FROM_TABLE WHERE RCPT_DETL_KEY IN ('06','07', '08', '09','10') ORDER BY 1  ");
+				accountsRS = ps.executeQuery();
+				System.out.println(accountsRS);
+				while (accountsRS.next()) {
+					JSONObject ackobj = new JSONObject();
+
+				//	System.out.println(accountsRS.getString("CD_CORRES_ADDR4"));
+					ackobj.put("key", ReferenceUtil.ConvertIFNullToString(accountsRS.getString("RCPT_DETL_KEY")));
+					ackobj.put("value",ReferenceUtil.ConvertIFNullToString( accountsRS.getString("RCPT_DESCR")));
+				//	ackobj.put("filename", accountsRS.getString("OR_REPORT_FILENAME"));
+
+					array.add(ackobj);
+
+				}
+				if (array.isEmpty()) {
+					// no tasks for user
+					obj.put("status", "success");
+					obj.put("message", "No Records Found !!!");
+				} else {
+					obj.put("status", "success");
+					obj.put("message", "User-Id List  !!!");
+					obj.put("CREDIT_TYPE_LIST", array);
+				}
+
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				obj.put("status", "fail");
+				e.printStackTrace();
+				obj.put("message", "database not connected");
+			}
+
+			return obj;
+	}
+
+	@Override
+	public JSONObject getgramapanchayathlist(JSONObject object) {
+		// TODO Auto-generated method stub
+		PreparedStatement ps = null;
+		ResultSet accountsRS = null;
+		JSONArray array = new JSONArray();
+		JSONObject obj = new JSONObject();
+
+		String conn_type = object.getString("conn_type");
+		
+		System.out.println(object);
+
+		try {
+
+			if (conn_type.equalsIgnoreCase("LT")) {
+				dbConnection = databaseObj.getDatabaseConnection();
+			} else if (conn_type.equals("HT")) {
+				dbConnection = databaseObj.getHTDatabaseConnection();
+			}
+
+			ps = dbConnection.prepareStatement(" SELECT DISTINCT CD_PLACE_NAME FROM CUST_DESCR WHERE CD_RR_NO LIKE '"+object.getString("location_code")+"%' ");
+			accountsRS = ps.executeQuery();
+			System.out.println(accountsRS);
+			while (accountsRS.next()) {
+				JSONObject ackobj = new JSONObject();
+
+			//	System.out.println(accountsRS.getString("CD_CORRES_ADDR4"));
+				ackobj.put("key", ReferenceUtil.ConvertIFNullToString(accountsRS.getString("CD_PLACE_NAME")));
+				ackobj.put("value",ReferenceUtil.ConvertIFNullToString( accountsRS.getString("CD_PLACE_NAME")));
+			//	ackobj.put("filename", accountsRS.getString("OR_REPORT_FILENAME"));
+
+				array.add(ackobj);
+
+			}
+			if (array.isEmpty()) {
+				// no tasks for user
+				obj.put("status", "success");
+				obj.put("message", "No Records Found !!!");
+			} else {
+				obj.put("status", "success");
+				obj.put("message", "Grama Panchayath List  !!!");
+				obj.put("GRAMA_PANCHAYATH_LIST", array);
+			}
+
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			obj.put("status", "fail");
+			e.printStackTrace();
+			obj.put("message", "database not connected");
+		}
+
+		return obj;
+	}
+
+	@Override
+	public JSONObject getchargedescriptionlist(JSONObject object) {
+		// TODO Auto-generated method stub
+		 PreparedStatement ps = null;
+			ResultSet accountsRS = null;
+			JSONArray array = new JSONArray();
+			JSONObject obj = new JSONObject();
+
+			String conn_type = object.getString("conn_type");
+			
+			System.out.println(object);
+
+			try {
+
+				if (conn_type.equalsIgnoreCase("LT")) {
+					dbConnection = databaseObj.getDatabaseConnection();
+				} else if (conn_type.equals("HT")) {
+					dbConnection = databaseObj.getHTDatabaseConnection();
+				}
+
+				ps = dbConnection.prepareStatement(" 	SELECT PAP_CHRG_CD,PAP_DESCR from PYMNT_ADJ_PRIORITY ORDER BY 1");
+				accountsRS = ps.executeQuery();
+				System.out.println(accountsRS);
+				while (accountsRS.next()) {
+					JSONObject ackobj = new JSONObject();
+
+				//	System.out.println(accountsRS.getString("CD_CORRES_ADDR4"));
+					ackobj.put("key", ReferenceUtil.ConvertIFNullToString(accountsRS.getString("PAP_CHRG_CD")));
+					ackobj.put("value",ReferenceUtil.ConvertIFNullToString( accountsRS.getString("PAP_DESCR")));
+				//	ackobj.put("filename", accountsRS.getString("OR_REPORT_FILENAME"));
+
+					array.add(ackobj);
+
+				}
+				if (array.isEmpty()) {
+					// no tasks for user
+					obj.put("status", "success");
+					obj.put("message", "No Records Found !!!");
+				} else {
+					obj.put("status", "success");
+					obj.put("message", "User-Id List  !!!");
+					obj.put("CHARGE_DESCRIPTION_LIST", array);
+				}
+
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				obj.put("status", "fail");
+				e.printStackTrace();
+				obj.put("message", "database not connected");
+			}
+
+			return obj;
 	}
 
 }

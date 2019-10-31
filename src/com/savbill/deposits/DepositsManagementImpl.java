@@ -450,4 +450,116 @@ public class DepositsManagementImpl implements IDepositsManagement {
 		return obj;
 	}
 
+	@Override
+	public JSONObject calculateadditional_3mmd(JSONObject object) {
+		// TODO Auto-generated method stub
+
+		CallableStatement accountsCS = null;
+		ResultSet accountsRS = null;
+		JSONObject obj = new JSONObject();
+		
+		String conn_type = (String) object.get("conn_type");
+		
+		try {
+				if(conn_type.equalsIgnoreCase("LT")){
+					dbConnection = databaseObj.getDatabaseConnection();
+				}else if(conn_type.equals("HT")){
+					dbConnection = databaseObj.getHTDatabaseConnection();
+				}
+				accountsCS=dbConnection.prepareCall(DBQueries.CALCULATE_ADDITIONAL_3MMD);
+				accountsCS.setString(1, (String) object.get("location_code"));
+				accountsCS.setString(2, (String) object.get("rrno"));
+				accountsCS.setString(3, (String) object.get("year"));
+				accountsCS.setString(4, (String) object.get("mmd"));
+				accountsCS.setString(5, (String) object.get("userid"));
+				
+				accountsCS.registerOutParameter(6, OracleTypes.CURSOR);
+				accountsCS.executeUpdate();
+				
+				accountsRS = (ResultSet) accountsCS.getObject(6);
+					
+				if(accountsRS.next()){
+					String RESP = accountsRS.getString("RESP");
+					System.out.println("RESP : "+RESP);
+					
+					if(RESP.equalsIgnoreCase("success")){
+						obj.put("status", "success");
+						obj.put("message", " Additional 3MMD calculated successfully.");
+					}else if (RESP.equalsIgnoreCase("fail")) {
+						obj.put("status", "error");
+						obj.put("message", " Additional 3MMD  Failed.");
+					}else {
+						obj.put("status", "error");
+						obj.put("message", RESP);
+					}						
+				}
+		} catch (Exception e) {
+			obj.put("status", "fail");
+			e.printStackTrace();
+			obj.put("message", "database not connected");
+		}finally
+		{
+			DBManagerResourceRelease.close(accountsRS, accountsCS);
+		}
+		
+		return obj;
+	}
+
+	@Override
+	public JSONObject calculatesecuritydeposit(JSONObject object) {
+		// TODO Auto-generated method stub
+
+		CallableStatement accountsCS = null;
+		ResultSet accountsRS = null;
+		JSONObject obj = new JSONObject();
+		
+		String conn_type = (String) object.get("conn_type");
+
+		try {
+				if(conn_type.equalsIgnoreCase("LT")){
+					dbConnection = databaseObj.getDatabaseConnection();
+				}else if(conn_type.equals("HT")){
+					dbConnection = databaseObj.getHTDatabaseConnection();
+				}
+				accountsCS=dbConnection.prepareCall(DBQueries.CALCULATE_SECURITY_DEPOSIT_INTEREST);
+				accountsCS.setString(1, (String) object.get("location_code"));
+				accountsCS.setString(2, (String) object.get("rrno"));
+				accountsCS.setString(3, (String) object.get("year"));
+				accountsCS.setString(4, (String) object.get("interest"));
+				accountsCS.setString(5, (String) object.get("tds_amount"));
+				accountsCS.setString(6, (String) object.get("tds_interest"));
+				accountsCS.setString(7, (String) object.get("userid"));
+				
+				accountsCS.registerOutParameter(8, OracleTypes.CURSOR);
+				accountsCS.executeUpdate();
+				
+				accountsRS = (ResultSet) accountsCS.getObject(8);
+					
+				if(accountsRS.next()){
+					String RESP = accountsRS.getString("RESP");
+					System.out.println("RESP : "+RESP);
+					
+					if(RESP.equalsIgnoreCase("success")){
+						obj.put("status", "success");
+						obj.put("message", " Security Deposit Interest calculated successfully.");
+					}else if (RESP.equalsIgnoreCase("fail")) {
+						obj.put("status", "error");
+						obj.put("message", " Security Deposit Interest  Failed.");
+					}else {
+						obj.put("status", "error");
+						obj.put("message", RESP);
+					}						
+				}
+		} catch (Exception e) {
+			obj.put("status", "fail");
+			e.printStackTrace();
+			obj.put("message", "database not connected");
+		}finally
+		{
+			DBManagerResourceRelease.close(accountsRS, accountsCS);
+		}
+		
+		return obj;
+	}
+
 }

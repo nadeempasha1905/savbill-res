@@ -102,6 +102,9 @@ public class DBQueries {
 	public static final String GET_DEPINT_DETLS_FOR_APPROVE = "{call PKG_DEPOSITS.GET_DEPINT_DETLS_FOR_APPROVE(?,?,?,?,?)}";
 	public static final String DEPOSIT_INT_CREDIT_APPROVE = "{call PKG_DEPOSITS.DEPOSIT_INT_CREDIT_APPROVE(?,?,?,?)}";
 	
+	public static final String CALCULATE_ADDITIONAL_3MMD = "{call PKG_DEPOSITS.GENERATE_ADDNL_MMD(?,?,?,?,?,?)}";
+	public static final String CALCULATE_SECURITY_DEPOSIT_INTEREST = "{call PKG_DEPOSITS.GENERATE_DEPOSIT_INTREST(?,?,?,?,?,?,?,?)}";
+	
 	//Deposits Module ends
 	
 	//Cash Section Module Procedures
@@ -195,7 +198,7 @@ public class DBQueries {
 	public static final String GET_CREDIT_DETLS_FOR_APPROVAL = "{call PKG_ACCOUNTS.GET_CREDIT_DETLS_FOR_APPROVAL(?,?)}";
 	public static final String GET_BULK_CR_DETLS_FOR_APPROVAL = "{call PKG_ACCOUNTS.GET_BULK_CR_DETLS_FOR_APPROVAL(?,?,?,?,?,?,?,?,?)}";
 	public static final String GET_BULK_CREDIT_DETLS_APPROVE = "{call PKG_ACCOUNTS.GET_BULK_CREDIT_DETLS_APPROVE(?,?,?,?,?,?,?,?,?)}";
-	public static final String APPROVE_CREDIT_DETAILS = "{call PKG_MANUAL_CREDIT.INS_CR_DETL(?,?,?,?,?,?,?,?,?,?)}";
+	public static final String APPROVE_CREDIT_DETAILS = "{call PKG_MANUAL_CREDIT.INS_CR_DETL(?,?,?,?,?,?,?,?)}";
 	public static final String GET_DEPOSIT_DETLS_FOR_APPROVAL = "{call PKG_ACCOUNTS.GET_DEPOSIT_DETLS_FOR_APPROVAL(?,?,?,?,?)}";
 	
 	//Withdrawal
@@ -254,6 +257,8 @@ public class DBQueries {
 	public static final String GET_FDR_ENRGY_AUDIT_DETAILS = "{call PKG_ENERGY_AUDIT.GET_FDR_ENRGY_AUDIT_DETAILS(?,?,?,?,?)}";
 	public static final String UPSERT_FEEDER_UNITS = "{call PKG_ENERGY_AUDIT.UPSERT_FEEDER_UNITS(?,?,?,?,?,?,?,?)}";
 	
+	public static final String SAVE_DTC_ASSESSED_UNITS = "{call PKG_ENERGY_AUDIT.UPSERT_TRSFMR_ASSED_UNITS	(?,?,?,?)}";
+	
 	//Energy Audit Module Ends
 	
 	//User Module procedures 
@@ -279,6 +284,8 @@ public class DBQueries {
 	
 	// Report Modulae Starts
 	public static final String REPORT_GET_BILLING_EFFICIENCY = "{call GET_BILLING_EFFICIENCY(?,?,?,?,?,?,?,?)}";
+	
+	public static final String OTHER_REPORTS = "{call PKG_OTHER_REPORTS.GET_OTHER_REPORTS(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)}";
 	
 	
 	/// Report Module Ends 

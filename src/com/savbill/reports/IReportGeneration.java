@@ -34,4 +34,20 @@ public interface IReportGeneration {
 
 	JSONObject getPaymentPurposewiseReport(HttpServletRequest request, HttpServletResponse response, JSONObject object);
 
+	JSONObject getotherreportstypelist(HttpServletRequest request, HttpServletResponse response, JSONObject object);
+
+	JSONObject getledgernolist(HttpServletRequest request, HttpServletResponse response, JSONObject object);
+
+	JSONObject getexceptionreportstypelist(HttpServletRequest request, HttpServletResponse response, JSONObject object);
+
+	JSONObject getexceptionreports_camplist(JSONObject object);
+
+	JSONObject getuseridlist_billcancelreport(JSONObject object);
+
+	JSONObject getcredittypelist(JSONObject object);
+
+	JSONObject getgramapanchayathlist(JSONObject object);
+
+	JSONObject getchargedescriptionlist(JSONObject object);
+
 }

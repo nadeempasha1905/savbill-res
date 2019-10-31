@@ -32,7 +32,9 @@ import com.savbill.master.IMasterManagement;
 import com.savbill.master.MasterManagementImpl;
 import com.savbill.preloadpicklist.IPreLoadPickList;
 import com.savbill.preloadpicklist.PreloadPicklistImpl;
+import com.savbill.reports.IOtherReports;
 import com.savbill.reports.IReportGeneration;
+import com.savbill.reports.OtherReportsImpl;
 import com.savbill.reports.ReportGenerationImpl;
 import com.savbill.serversidebilling.IServerSideBilling;
 import com.savbill.serversidebilling.ServerSideBillingImpl;
@@ -54,6 +56,7 @@ public class RouterServer {
 	IServerSideBilling serverSideBillObj = new ServerSideBillingImpl();
 	IAndroidBillingMaster androidBilling = new AndroidBillingMaster();
 	IReportGeneration reportObj = new ReportGenerationImpl();
+	IOtherReports othersObj = new OtherReportsImpl();
 	
 	
 /***************************************Master*************************************************/	
@@ -395,6 +398,15 @@ public class RouterServer {
 	public JSONObject getUserDetailsByUserId(final JSONObject object){
 		
 		return pickListObj.getUserDetailsByUserId(object);
+	}
+	
+	@POST
+	@Path("/getcustomerstatuslist")
+	@Consumes({MediaType.APPLICATION_JSON})
+	@Produces({MediaType.APPLICATION_JSON})
+	public JSONObject getcustomerstatuslist(final JSONObject object){
+		
+		return pickListObj.getcustomerstatuslist(object);
 	}
 	
 	
@@ -790,6 +802,24 @@ public class RouterServer {
 	public JSONObject getDepositInstrestAndNmmdParameters(final JSONObject object){
 		
 		return depositsObj.getDepositInstrestAndNmmdParameters(object);
+	} 
+	
+	@POST
+	@Path("/calculateadditional_3mmd")
+	@Consumes({MediaType.APPLICATION_JSON})
+	@Produces({MediaType.APPLICATION_JSON})
+	public JSONObject calculateadditional_3mmd(final JSONObject object){
+		
+		return depositsObj.calculateadditional_3mmd(object);
+	} 
+	
+	@POST
+	@Path("/calculatesecuritydeposit")
+	@Consumes({MediaType.APPLICATION_JSON})
+	@Produces({MediaType.APPLICATION_JSON})
+	public JSONObject calculatesecuritydeposit(final JSONObject object){
+		
+		return depositsObj.calculatesecuritydeposit(object);
 	} 
 	
 	@POST
@@ -1362,18 +1392,18 @@ public class RouterServer {
 	@Path("/approvecredits")
 	@Consumes({MediaType.APPLICATION_JSON})
 	@Produces({MediaType.APPLICATION_JSON})
-	public JSONObject approveCredits(final JSONObject object){
+	public JSONObject approveCredits(final JSONObject object,@Context HttpServletRequest request){
 		
-		return accountsObj.approveCredits(object);
+		return accountsObj.approveCredits(object,request);
 	}
 	
 	@POST
 	@Path("/rejectcredits")
 	@Consumes({MediaType.APPLICATION_JSON})
 	@Produces({MediaType.APPLICATION_JSON})
-	public JSONObject rejectCredits(final JSONObject object){
+	public JSONObject rejectCredits(final JSONObject object,@Context HttpServletRequest request){
 		
-		return accountsObj.rejectCredits(object);
+		return accountsObj.rejectCredits(object,request);
 	}
 	
 	@POST
@@ -2174,7 +2204,59 @@ public class RouterServer {
 		System.out.println("downloading report......."+request.getParameter("conn_type"));
 		
 		return reportObj.downloadreport(request,response);
-	}
+	}  
+	
+	/*
+	 * @POST
+	 * 
+	 * @Path("/generate_other_reports")
+	 * 
+	 * @Consumes({MediaType.APPLICATION_JSON})
+	 * 
+	 * @Produces({MediaType.APPLICATION_JSON}) public JSONObject
+	 * generate_other_reports(final JSONObject object, @Context HttpServletRequest
+	 * request, @Context HttpServletResponse response){
+	 * 
+	 * return othersObj.generate_other_reports(request, response,object);
+	 * 
+	 * }
+	 */
+	
+	@GET
+	@Path("/generate_other_reports")
+	@Produces("application/pdf")
+	public Response generate_other_reports(@Context HttpServletRequest request, @Context HttpServletResponse response){
+		System.out.println("downloading report......."+request.getParameter("conn_type"));
+		
+		return othersObj.generate_other_reports(request,response);
+	}  
+	
+	@GET
+	@Path("/generate_bill_cancel_report")
+	@Produces("application/pdf")
+	public Response generate_bill_cancel_report(@Context HttpServletRequest request, @Context HttpServletResponse response){
+		System.out.println("downloading report......."+request.getParameter("conn_type"));
+		
+		return othersObj.generate_bill_cancel_report(request,response);
+	} 
+	
+	@GET
+	@Path("/generate_credit_report")
+	@Produces("application/pdf")
+	public Response generate_credit_report(@Context HttpServletRequest request, @Context HttpServletResponse response){
+		System.out.println("downloading report......."+request.getParameter("conn_type"));
+		
+		return othersObj.generate_credit_report(request,response);
+	} 
+	
+	@GET
+	@Path("/generate_debit_withdrawal_report")
+	@Produces("application/pdf")
+	public Response generate_debit_withdrawal_report(@Context HttpServletRequest request, @Context HttpServletResponse response){
+		System.out.println("downloading report......."+request.getParameter("conn_type"));
+		
+		return othersObj.generate_debit_withdrawal_report(request,response);
+	} 
 	
 	@POST
 	@Path("/dashboard_billingefficiency_comparision")
@@ -2225,6 +2307,87 @@ public class RouterServer {
 	public JSONObject getsbdreports(final JSONObject object, @Context HttpServletRequest request, @Context HttpServletResponse response){
 
 		return  reportObj.getsbdreports(request, response,object);
+		
+	}
+	
+	@POST
+	@Path("/getotherreportstypelist")
+	@Consumes({MediaType.APPLICATION_JSON})
+	@Produces({MediaType.APPLICATION_JSON})
+	public JSONObject getotherreportstypelist(final JSONObject object, @Context HttpServletRequest request, @Context HttpServletResponse response){
+
+		return  reportObj.getotherreportstypelist(request, response,object);
+		
+	}
+	
+	@POST
+	@Path("/getledgernolist")
+	@Consumes({MediaType.APPLICATION_JSON})
+	@Produces({MediaType.APPLICATION_JSON})
+	public JSONObject getledgernolist(final JSONObject object, @Context HttpServletRequest request, @Context HttpServletResponse response){
+
+		return  reportObj.getledgernolist(request, response,object);
+		
+	}
+	
+	
+	@POST
+	@Path("/getexceptionreportstypelist")
+	@Consumes({MediaType.APPLICATION_JSON})
+	@Produces({MediaType.APPLICATION_JSON})
+	public JSONObject getexceptionreportstypelist(final JSONObject object, @Context HttpServletRequest request, @Context HttpServletResponse response){
+
+		return  reportObj.getexceptionreportstypelist(request, response,object);
+		
+	}
+	
+	@POST
+	@Path("/getexceptionreports_camplist")
+	@Consumes({MediaType.APPLICATION_JSON})
+	@Produces({MediaType.APPLICATION_JSON})
+	public JSONObject getexceptionreports_camplist(final JSONObject object){
+
+		return  reportObj.getexceptionreports_camplist(object);
+		
+	}
+	
+	@POST
+	@Path("/getuseridlist_billcancelreport")
+	@Consumes({MediaType.APPLICATION_JSON})
+	@Produces({MediaType.APPLICATION_JSON})
+	public JSONObject getuseridlist_billcancelreport(final JSONObject object){
+
+		return  reportObj.getuseridlist_billcancelreport(object);
+		
+	}
+	
+	@POST
+	@Path("/getcredittypelist")
+	@Consumes({MediaType.APPLICATION_JSON})
+	@Produces({MediaType.APPLICATION_JSON})
+	public JSONObject getcredittypelist(final JSONObject object){
+
+		return  reportObj.getcredittypelist(object);
+		
+	}
+	
+	@POST
+	@Path("/getchargedescriptionreportlist")
+	@Consumes({MediaType.APPLICATION_JSON})
+	@Produces({MediaType.APPLICATION_JSON})
+	public JSONObject getchargedescriptionlist(final JSONObject object){
+
+		return  reportObj.getchargedescriptionlist(object);
+		
+	}
+	
+	@POST
+	@Path("/getgramapanchayathlist")
+	@Consumes({MediaType.APPLICATION_JSON})
+	@Produces({MediaType.APPLICATION_JSON})
+	public JSONObject getgramapanchayathlist(final JSONObject object){
+
+		return  reportObj.getgramapanchayathlist(object);
 		
 	}
 	

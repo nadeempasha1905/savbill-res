@@ -2492,4 +2492,79 @@ public class PreloadPicklistImpl implements IPreLoadPickList{
 		
 		return jsonResponse;
 	}
+
+	@Override
+	public JSONObject getcustomerstatuslist(JSONObject object) {
+		// TODO Auto-generated method stub
+		PreparedStatement ps = null;
+		ResultSet rs = null;
+
+		JSONArray MeterList = new JSONArray();
+		JSONObject jsonResponse = new JSONObject();
+		
+		try {
+			if(!object.isEmpty() || !object.isNullObject()){
+
+				String connType = (String) object.get("conn_type").toString().trim();
+					
+					if((connType.length() > 0 && connType != null)){
+						if(connType.equals("LT")){
+							dbConnection = databaseObj.getDatabaseConnection();
+						}else if(connType.equals("HT") || connType == "HT"){
+							dbConnection = databaseObj.getHTDatabaseConnection();
+						}
+						
+						if(dbConnection != null){
+							ps = dbConnection.prepareStatement(" SELECT CCD_CD_VAL,CCD_DESCR FROM Code_detl WHERE CCD_CCM_CD_TYP = 'CONN_STS' AND CCD_CD_VAL NOT IN ('1','9','10','12') ORDER BY 1 ");
+							rs = ps.executeQuery();
+							while (rs.next()) {
+								JSONObject meter = new JSONObject();
+								
+								meter.put("key", rs.getString("CCD_CD_VAL"));
+								meter.put("value", rs.getString("CCD_DESCR"));
+								
+								MeterList.add(meter);
+								
+								
+							}
+							
+							if(MeterList.isEmpty()){
+								jsonResponse.put("status", "success");
+								jsonResponse.put("message", "No Records Found For The Query.");
+							}else{
+								if(!MeterList.isEmpty()){
+									jsonResponse.put("status", "success");
+									jsonResponse.put("CUSTOMER_STATUS_LIST", MeterList);
+								}
+							}
+							
+							
+						}else{
+							jsonResponse.put("status", "fail");
+							jsonResponse.put("message", "Error : Database Not Connected.Contact Admin.");
+						}
+						
+						
+					}else{
+						jsonResponse.put("status", "success");
+						jsonResponse.put("message", "Please Input Mandatory Fields.Try Again.");
+					}
+				
+				
+			}else{
+				jsonResponse.put("status", "error");
+				jsonResponse.put("message", "Inputs Are Invalid.Try Again.");
+			}
+				
+		} catch (Exception e) {
+			jsonResponse.put("status", "fail");
+			jsonResponse.put("message", "Error In Retrieving Customer Status List.");
+			// TODO: handle exception
+		}finally
+		{
+			DBManagerResourceRelease.close(rs, ps);
+		}
+		
+		return jsonResponse;
+	}
 }

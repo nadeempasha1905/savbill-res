@@ -79,8 +79,8 @@ public interface IAccountManagement {
 	JSONObject insertCredit(JSONObject object);
 	JSONObject getPendingCredits(JSONObject object);
 	JSONObject getBulkCreditDetailsForApprove(JSONObject object);
-	JSONObject approveCredits(JSONObject object);
-	JSONObject rejectCredits(JSONObject object);
+	JSONObject approveCredits(JSONObject object, HttpServletRequest request);
+	JSONObject rejectCredits(JSONObject object, HttpServletRequest request);
 
 	JSONObject getPendingDeposits(JSONObject object);
 	

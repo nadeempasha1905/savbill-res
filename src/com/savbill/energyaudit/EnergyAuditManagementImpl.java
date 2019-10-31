@@ -561,7 +561,8 @@ public class EnergyAuditManagementImpl implements IEnergyAuditManagement {
 		ResultSet rs = null;
 		JSONObject jsonResponse = new JSONObject();
 		JSONArray jsonarray = new JSONArray();
-		
+		ResultSet accountsRS = null;
+
 		try {
 			
 			if(!object.isEmpty()){
@@ -581,11 +582,56 @@ public class EnergyAuditManagementImpl implements IEnergyAuditManagement {
 					jsonResponse.put("message", "Consumption Details Are Empty !!! ");					
 				}else {
 					
+					/*
+					 * "userid" : $rootScope.user.user_id, "reading_date": $scope.readingDate,
+					 * "station_code": $scope.temp_row.stn_cd, "feeder_code" :
+					 * $scope.temp_row.fdr_cd, "om_code" : $scope.temp_row.om_cd,
+					 * "transformer_code":$scope.temp_row.dtc_cd,
+					 * "assessedconsumptiondetails":$scope.assessedconsumptiondetails
+					 */
+					
+					String assesed_string = "";
 					for(int i = 0 ; i<assessed_consmp.size();i++) {
 						
 						JSONObject json_temp =	(JSONObject) assessed_consmp.get(i);
 						
 						System.out.println(json_temp.get("tariff_category"));
+						
+						String temp =    (String)object.get("station_code") + "~" +
+											(String)object.get("feeder_code") + "~" +	
+											(String)object.get("om_code") + "~" +	
+											(String)object.get("transformer_code") + "~" +	
+											(String)json_temp.get("tariff_category_id") + "~" +	
+											(String)json_temp.get("no_of_installtions") + "~" +
+											(String)json_temp.get("assessed_units") + ","
+											;
+						assesed_string = assesed_string + temp ; 
+					}
+					
+					assesed_string = assesed_string.substring(0, assesed_string.length()-1);
+					
+					System.out.println(assesed_string);
+					
+					accountsCS=dbConnection.prepareCall(DBQueries.SAVE_DTC_ASSESSED_UNITS);
+					accountsCS.registerOutParameter(1, OracleTypes.CURSOR);
+					accountsCS.setString(2, (String)object.get("reading_date"));
+					accountsCS.setString(3, assesed_string);
+					accountsCS.setString(4, (String)object.get("userid"));
+
+					accountsCS.executeUpdate();
+					accountsRS = (ResultSet) accountsCS.getObject(1);
+					
+					if(accountsRS.next()){
+						String RESP = accountsRS.getString("RESP");
+						System.out.println("RESP : "+RESP);
+						
+						if(RESP.equalsIgnoreCase("success")){
+							jsonResponse.put("status", "success");
+							jsonResponse.put("message", accountsRS.getString("message"));
+						}else  {
+							jsonResponse.put("status", "error");
+							jsonResponse.put("message", accountsRS.getString("message"));
+						}
 					}
 				}				
 			}else{

@@ -12,4 +12,6 @@ public interface IDepositsManagement {
 	JSONObject getDepositInstrestYear(JSONObject object);
 	JSONObject getPendingDepositIntrestDetails(JSONObject object);
 	JSONObject approveDepositsIntrest(JSONObject data);
+	JSONObject calculateadditional_3mmd(JSONObject object);
+	JSONObject calculatesecuritydeposit(JSONObject object);
 }

@@ -1084,11 +1084,11 @@ public class AccountManagementImpl implements IAccountManagement {
 					dbConnection = databaseObj.getHTDatabaseConnection();
 				}
 
-				String Query = "  SELECT RD_CHRG_CD CHRG_CD,BCR_DESCR CHRG_CD_DESCR,RD_REBATE_UNIT REBATE_UNIT,RD_MAX_REBATE MAX_REBATE	"
+				String Query = "  SELECT RD_CHRG_CD CHRG_CD,PAP_DESCR CHRG_CD_DESCR,RD_REBATE_UNIT REBATE_UNIT,RD_MAX_REBATE MAX_REBATE	"
 								+ "FROM REBATE_DETL,PYMNT_ADJ_PRIORITY	"
 								+ "WHERE RD_REBATE_CODE = '"+rebate_type+"' "
 								+ "AND SYSDATE BETWEEN RD_EFF_FROM_DT AND NVL(RD_EFF_TO_DT,SYSDATE)	"
-								+ "AND BCR_CHRG_CD = RD_CHRG_CD  "; 
+								+ "AND PAP_CHRG_CD = RD_CHRG_CD  "; 
 				
 				if(dbConnection != null){
 					ps = dbConnection.prepareStatement(Query) ; 
@@ -3676,8 +3676,10 @@ public class AccountManagementImpl implements IAccountManagement {
 		JSONObject obj = new JSONObject();
 		
 		String rr_no = (String) object.get("rr_no");
-		String jv_sts = (String) object.get("jv_sts");
+		String jv_flag = (String) object.get("jv_flag");
 		String conn_type = (String) object.get("conn_type");
+		
+		System.out.println(object);
 		
 		try {
 			if(!rr_no.isEmpty() ){
@@ -3691,7 +3693,7 @@ public class AccountManagementImpl implements IAccountManagement {
 				accountsCS.setString(1, rr_no);
 				accountsCS.setString(2, (String) object.get("credit_amt"));
 				accountsCS.setString(3, (String) object.get("remarks"));
-				accountsCS.setString(4, jv_sts);
+				accountsCS.setString(4, jv_flag);
 				accountsCS.setString(5, (String) object.get("userid"));
 				
 				accountsCS.registerOutParameter(6, OracleTypes.CURSOR);
@@ -3868,22 +3870,30 @@ public class AccountManagementImpl implements IAccountManagement {
 	}
 	
 	@Override
-	public JSONObject approveCredits(JSONObject data) {
+	public JSONObject approveCredits(JSONObject data,HttpServletRequest request) {
 		
 		String approverid = (String) data.get("approverid");
 		String isBulk = (String) data.get("bulk");
 		String conn_type = (String) data.get("conn_type");
+		String location_code = (String) data.get("location_code");
 		
 		JSONObject AckObj=new JSONObject();
 		try {
 			if(data!=null){
 				
 		    	JSONArray getArray = data.getJSONArray("data");
-		    	
+		    	String credit_date = "";
 		    	for(int i = 0; i < getArray.size(); i++) {
 		    		JSONObject objects = getArray.getJSONObject(i);
 		    		AckObj = approveIndividualCredit(objects, conn_type, approverid, isBulk);
+		    		if(i == 0) {
+		    			credit_date = (String) objects.getString("credit_dt");
+		    		}
 			    }
+		    	
+				  CallReconProgram( credit_date, location_code,approverid,request.getServletContext().getRealPath("AccountManagementImpl.java"));
+				 
+		    	
 		    	return AckObj;
 			}
 		} catch (Exception e) {
@@ -3893,6 +3903,86 @@ public class AccountManagementImpl implements IAccountManagement {
 		}
 		
 		return AckObj;
+	}
+	
+	public boolean CallReconProgram(String ReceiptDate,
+			String Location,String UserID, String recon_contextPath) {
+		// TODO Auto-generated method stub
+		
+		CallableStatement cstmt = null;
+		ResultSet rs = null;
+		String db_ip = "";
+		String database = "";
+		String db_user = "";
+		String db_pass = "";
+		String recon_PATH = "";
+		
+		try{
+			
+			try{
+		    	//resouce bundle to read string's specified in properties file
+		    	ResourceBundle propsBundle=ResourceBundle.getBundle("savbilldb");
+		        
+		    	db_ip = propsBundle.getString("IP");
+		        database = propsBundle.getString("DATABASE");
+		        db_user = propsBundle.getString("USER");
+		        db_pass = propsBundle.getString("PASS");
+		        recon_PATH = propsBundle.getString("PATH");
+		       
+		       } 
+		    catch(Exception e){
+		        System.out.println("error" + e);
+		       }	 
+			
+			//Call Reconcilation Program Here...................
+			System.out.println("Call Reconcilation Program Here...........");
+			
+			
+			System.out.println("Recon Program Starts Here...!");
+			
+			//Call The Respective Child Process...!
+			System.out.println("java -jar "+recon_PATH+"Reconcilation.jar "+db_ip+" "+db_user+"/"+db_pass+" "+database+" "+ReceiptDate );
+			
+			
+			Process p = null;
+			try {
+				p = Runtime.getRuntime().exec("java -jar "+recon_PATH+"Reconcilation.jar "+db_ip+" "+db_user+"/"+db_pass+" "+database+" "+ReceiptDate);
+			} catch (IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+			 
+	        final InputStream is = p.getInputStream();
+	        Thread t = new Thread(new Runnable() {
+	            public void run() {
+	                InputStreamReader isr = new InputStreamReader(is);
+	                int ch;
+	                try {
+	                    while ((ch = isr.read()) != -1) {
+	                        System.out.print((char) ch);
+	                    }
+	                } catch (IOException e) {
+	                    e.printStackTrace();
+	                }
+	            }
+	        });
+	        t.start();
+	        try {
+				p.waitFor();
+				t.join();
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+		}catch (Exception e) {
+			// TODO: handle exception
+			e.printStackTrace();
+			return false;
+		}finally{
+			
+		}
+		return true;
 	}
 	
 	public JSONObject approveIndividualCredit(JSONObject object, String conn_type, String approverid, String isBulk) {
@@ -3923,31 +4013,42 @@ public class AccountManagementImpl implements IAccountManagement {
 					accountsCS.setString(5, isBulk);
 				}
 				accountsCS.setString(6, approve_sts);
-				accountsCS.setString(7, "clb");
-				accountsCS.setString(8, "clb");
-				accountsCS.setString(9, (String) object.get("inserted_tmpstp"));
+			//	accountsCS.setString(7, "clb");
+			//	accountsCS.setString(8, "clb");
+				accountsCS.setString(7, (String) object.get("inserted_tmpstp"));
 				
-				accountsCS.registerOutParameter(10, OracleTypes.VARCHAR);
+				accountsCS.registerOutParameter(8, OracleTypes.VARCHAR);
 				accountsCS.executeUpdate();
 				
-				accountsRS = (ResultSet) accountsCS.getObject(10);
+				String RESP = (String) accountsCS.getObject(8);
 					
-					if(accountsRS.next()){
-						String RESP = accountsRS.getString("RESP");
+				//	if(accountsRS.next()){
+						//String RESP = accountsRS.getString("RESP");
 						System.out.println("RESP : "+RESP);
 						
 						if(RESP.equalsIgnoreCase("success")){
 							obj.put("status", "success");
 							obj.put("message", " Credits Approved successfully");
-							obj.put("sl_no", accountsRS.getString("SL_NO"));
+							//obj.put("sl_no", accountsRS.getString("SL_NO"));
+							
+					/*
+					 * CallReconProgram( object.getString("to_rrnumber"),
+					 * object.getString("receipt_date"), object.getString("location_code"),
+					 * object.getString("user"),
+					 * request.getServletContext().getRealPath("AccountManagementImpl.java"));
+					 */
+							
 						}else if (RESP.equalsIgnoreCase("fail")) {
 							obj.put("status", "error");
 							obj.put("message", " Credits Approve  Failed.");
 						}else if (RESP.equalsIgnoreCase("INVALID_RRNO")) {
 							obj.put("status", "error");
 							obj.put("message", " Given RR Number"+ rr_no.substring(7)+" Not Found");
-						}						
-					}
+						}	else {
+							obj.put("status", "error");
+							obj.put("message",RESP);
+						}
+				//	}
 														
 			}else{
 				obj.put("status", "error");
@@ -3967,10 +4068,13 @@ public class AccountManagementImpl implements IAccountManagement {
 	}
 	
 	@Override
-	public JSONObject rejectCredits(JSONObject data) {
+	public JSONObject rejectCredits(JSONObject data,HttpServletRequest request) {
 		
 		String rejecterid = (String) data.get("rejecterid");
 		String conn_type = (String) data.get("conn_type");
+		String location_code = (String) data.get("location_code");
+		
+		String credit_date = "";
 		
 		JSONObject AckObj=new JSONObject();
 		try {
@@ -3981,7 +4085,12 @@ public class AccountManagementImpl implements IAccountManagement {
 		    	for(int i = 0; i < getArray.size(); i++) {
 		    		JSONObject objects = getArray.getJSONObject(i);
 		    		AckObj = rejectIndividualCredit(objects, conn_type, rejecterid);
+		    		if(i == 0) {
+		    			credit_date = (String) objects.getString("credit_dt");
+		    		}
 			    }
+		    	
+				  CallReconProgram( credit_date, location_code,rejecterid,request.getServletContext().getRealPath("AccountManagementImpl.java"));
 		    	return AckObj;
 			}
 		} catch (Exception e) {
@@ -4017,33 +4126,30 @@ public class AccountManagementImpl implements IAccountManagement {
 				accountsCS.setString(4, rejecterid);
 				accountsCS.setString(5, (String) object.get("remarks"));
 				accountsCS.setString(6, approve_sts);
-				accountsCS.setString(7, "clb");
-				accountsCS.setString(8, "clb");
-				accountsCS.setString(9, (String) object.get("inserted_tmpstp"));
+				//accountsCS.setString(7, "clb");
+				//accountsCS.setString(8, "clb");
+				accountsCS.setString(7, (String) object.get("inserted_tmpstp"));
 				
 				
 				System.out.println("rejected user:"+(String) object.get("rejecterid"));
 				
-				accountsCS.registerOutParameter(10, OracleTypes.VARCHAR);
+				accountsCS.registerOutParameter(8, OracleTypes.VARCHAR);
 				accountsCS.executeUpdate();
 				
-				accountsRS = (ResultSet) accountsCS.getObject(10);
+				//accountsRS = (ResultSet) accountsCS.getObject(8);
 					
-					if(accountsRS.next()){
-						String RESP = accountsRS.getString("RESP");
+					//if(accountsRS.next()){
+						String RESP = (String) accountsCS.getObject(8);
 
-						if(RESP.equalsIgnoreCase("success")){
+						if(RESP.equalsIgnoreCase("TRUE")){
 							obj.put("status", "success");
 							obj.put("message", " Credits Rejected successfully");
-							obj.put("sl_no", accountsRS.getString("SL_NO"));
-						}else if (RESP.equalsIgnoreCase("fail")) {
+						//	obj.put("sl_no", accountsRS.getString("SL_NO"));
+						}else {
 							obj.put("status", "error");
-							obj.put("message", " Credits Rejection Failed.");
-						}else if (RESP.equalsIgnoreCase("INVALID_RRNO")) {
-							obj.put("status", "error");
-							obj.put("message", " Given RR Number"+ rr_no.substring(7)+" Not Found");
+							obj.put("message",RESP);
 						}						
-					}
+					//}
 														
 			}else{
 				obj.put("status", "error");

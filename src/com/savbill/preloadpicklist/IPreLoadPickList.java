@@ -81,6 +81,7 @@ public interface IPreLoadPickList {
 	JSONObject getUserIdList(JSONObject object);
 	JSONObject getUserRolesList(JSONObject object);
 	JSONObject getUserDetailsByUserId(JSONObject object);
+	JSONObject getcustomerstatuslist(JSONObject object);
 	
 
 }
