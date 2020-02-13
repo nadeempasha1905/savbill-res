@@ -23,4 +23,16 @@ public interface IOtherReports {
 
 	Response generate_debit_withdrawal_report(HttpServletRequest request, HttpServletResponse response);
 
+	Response generate_adjustment_report(HttpServletRequest request, HttpServletResponse response);
+
+	Response generate_dlrmnr_report(HttpServletRequest request, HttpServletResponse response);
+
+	Response generate_present_reading_less_report(HttpServletRequest request, HttpServletResponse response);
+
+	Response generate_abnormal_subnormal_report(HttpServletRequest request, HttpServletResponse response);
+
+	Response generate_zero_consumption_report(HttpServletRequest request, HttpServletResponse response);
+
+	Response generate_high_value_report(HttpServletRequest request, HttpServletResponse response);
+
 }

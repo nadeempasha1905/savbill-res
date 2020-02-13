@@ -2258,6 +2258,61 @@ public class RouterServer {
 		return othersObj.generate_debit_withdrawal_report(request,response);
 	} 
 	
+	@GET
+	@Path("/generate_adjustment_report")
+	@Produces("application/pdf")
+	public Response generate_adjustment_report(@Context HttpServletRequest request, @Context HttpServletResponse response){
+		System.out.println("downloading report......."+request.getParameter("conn_type"));
+		
+		return othersObj.generate_adjustment_report(request,response);
+	} 
+	
+	@GET
+	@Path("/generate_dlrmnr_report")
+	@Produces("application/pdf")
+	public Response generate_dlrmnr_report(@Context HttpServletRequest request, @Context HttpServletResponse response){
+		System.out.println("downloading report......."+request.getParameter("conn_type"));
+		
+		return othersObj.generate_dlrmnr_report(request,response);
+	} 
+	
+	@GET
+	@Path("/generate_present_reading_less_report")
+	@Produces("application/pdf")
+	public Response generate_present_reading_less_report(@Context HttpServletRequest request, @Context HttpServletResponse response){
+		System.out.println("downloading report......."+request.getParameter("conn_type"));
+		
+		return othersObj.generate_present_reading_less_report(request,response);
+	} 
+	
+	@GET
+	@Path("/generate_abnormal_subnormal_report")
+	@Produces("application/pdf")
+	public Response generate_abnormal_subnormal_report(@Context HttpServletRequest request, @Context HttpServletResponse response){
+		System.out.println("downloading report......."+request.getParameter("conn_type"));
+		
+		return othersObj.generate_abnormal_subnormal_report(request,response);
+	} 
+	
+	@GET
+	@Path("/generate_zero_consumption_report")
+	@Produces("application/pdf")
+	public Response generate_zero_consumption_report(@Context HttpServletRequest request, @Context HttpServletResponse response){
+		System.out.println("downloading report......."+request.getParameter("conn_type"));
+		
+		return othersObj.generate_zero_consumption_report(request,response);
+	}
+	
+	@GET
+	@Path("/generate_high_value_report")
+	@Produces("application/pdf")
+	public Response generate_high_value_report(@Context HttpServletRequest request, @Context HttpServletResponse response){
+		System.out.println("downloading report......."+request.getParameter("conn_type"));
+		
+		return othersObj.generate_high_value_report(request,response);
+	}
+	
+	
 	@POST
 	@Path("/dashboard_billingefficiency_comparision")
 	@Consumes({MediaType.APPLICATION_JSON})

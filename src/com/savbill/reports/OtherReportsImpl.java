@@ -406,4 +406,404 @@ public class OtherReportsImpl implements IOtherReports {
 				    .header("Content-Disposition","attachment; filename="+fileName+".pdf").build();
 	}
 
+	@Override
+	public Response generate_adjustment_report(HttpServletRequest request, HttpServletResponse response) {
+		// TODO Auto-generated method stub
+		HashMap parameterMap = new HashMap();
+		String path = null ;
+		
+		String conn_type = request.getParameter("conn_type").trim();
+		String fileName =  request.getParameter("filename").trim();
+		
+	        try {
+	        	
+				if (conn_type.equalsIgnoreCase("LT")) {
+					dbConnection = databaseObj.getDatabaseConnection();
+				} else if (conn_type.equals("HT")) {
+					dbConnection = databaseObj.getHTDatabaseConnection();
+				}
+	        	
+	        	String contextPath = request.getServletContext().getRealPath("OtherReportsImpl.java");
+	        	File contextfile = new File(contextPath);
+	        	String parentfile = contextfile.getParent();
+	        	
+	        	File f = new File(REPORT_PATH+ fileName );
+				path = f.getPath();
+				
+				String imgPath = REPORT_PATH +REPORT_IMAGE_LOGO_NAME;
+				
+				parameterMap.put("company_name", request.getParameter("company")); 
+				parameterMap.put("subdivision_name",request.getParameter("subdivision_name"));
+				parameterMap.put("location_code",  request.getParameter("location_code"));
+	            parameterMap.put("imgPath", imgPath);
+	            
+	           // +"&billcancel_selected="+($scope.billcancel_selected ? $scope.billcancel_selected : '')
+	            
+	            parameterMap.put("report_view_selected", request.getParameter("reporttype_selected"));
+	            parameterMap.put("fromtype", request.getParameter("fromtype"));
+	            parameterMap.put("totype", request.getParameter("totype"));
+	            parameterMap.put("om_section", request.getParameter("om_section"));
+	            parameterMap.put("meter_code", request.getParameter("meter_code"));
+	            parameterMap.put("reading_day", request.getParameter("reading_day"));
+	            parameterMap.put("dateoption_selected", request.getParameter("dateoption_selected"));
+	            parameterMap.put("from_date", request.getParameter("from_date"));
+	            parameterMap.put("to_date", request.getParameter("to_date"));
+	            parameterMap.put("month_year", request.getParameter("month_year"));
+	            parameterMap.put("tariffs", request.getParameter("tariffs"));
+	            parameterMap.put("username", request.getParameter("username"));
+	            
+	            System.out.println(parameterMap);
+	            
+	        } catch (Exception e) {
+	            e.printStackTrace();
+	        } finally {
+	            try {
+	            	//dbConn.close();
+	            } catch (Exception e) {
+	                e.printStackTrace();
+	            }
+	        }
+	        
+	        response.setContentType("application/pdf");
+	        byte[] buffer2 = create_report(path,parameterMap,fileName,request,response);
+	        return Response.ok(buffer2)
+				    .header("Content-Length", buffer2.length)
+				    .header("Content-Disposition","attachment; filename="+fileName+".pdf").build();
+	}
+
+	@Override
+	public Response generate_dlrmnr_report(HttpServletRequest request, HttpServletResponse response) {
+		// TODO Auto-generated method stub
+		HashMap parameterMap = new HashMap();
+		String path = null ;
+		
+		String conn_type = request.getParameter("conn_type").trim();
+		String fileName =  request.getParameter("filename").trim();
+		
+	        try {
+	        	
+				if (conn_type.equalsIgnoreCase("LT")) {
+					dbConnection = databaseObj.getDatabaseConnection();
+				} else if (conn_type.equals("HT")) {
+					dbConnection = databaseObj.getHTDatabaseConnection();
+				}
+	        	
+	        	String contextPath = request.getServletContext().getRealPath("OtherReportsImpl.java");
+	        	File contextfile = new File(contextPath);
+	        	String parentfile = contextfile.getParent();
+	        	
+	        	File f = new File(REPORT_PATH+ fileName );
+				path = f.getPath();
+				
+				String imgPath = REPORT_PATH +REPORT_IMAGE_LOGO_NAME;
+				
+				parameterMap.put("company_name", request.getParameter("company")); 
+				parameterMap.put("subdivision_name",request.getParameter("subdivision_name"));
+				parameterMap.put("location_code",  request.getParameter("location_code"));
+	            parameterMap.put("imgPath", imgPath);
+	            
+	           // +"&billcancel_selected="+($scope.billcancel_selected ? $scope.billcancel_selected : '')
+	            
+			/*
+			 * +"&reporttype_selected="+($scope.doorlockmnr_reporttype_selected ? $scope.doorlockmnr_reporttype_selected : '')
+					+"&doorlockmnr_type_selected="+($scope.doorlockmnr_type_selected ? $scope.doorlockmnr_type_selected : '')
+					+"&reportwise_selected="+($scope.reportwise_selected ? $scope.reportwise_selected : '')
+					+"&monthstype="+($scope.doorlockmnr.monthstype ? $scope.doorlockmnr.monthstype.key : '')
+					+"&from_months="+($scope.doorlockmnr.monthtype_from_value ? $scope.doorlockmnr.monthtype_from_value : '')
+					+"&to_months="+($scope.doorlockmnr.monthtype_to_value ? $scope.doorlockmnr.monthtype_to_value : '')
+			*/
+	            parameterMap.put("report_view_selected", request.getParameter("reporttype_selected"));
+	            parameterMap.put("monthtype", request.getParameter("monthstype"));
+	            parameterMap.put("monthsfrom", request.getParameter("from_months"));
+	            parameterMap.put("monthsto", request.getParameter("to_months"));
+	            parameterMap.put("report_id", request.getParameter("doorlockmnr_type_selected"));
+	            parameterMap.put("grouptype", request.getParameter("reportwise_selected"));
+	            parameterMap.put("om_section", request.getParameter("om_section"));
+	            parameterMap.put("meter_code", request.getParameter("meter_code"));
+	            parameterMap.put("reading_day", request.getParameter("reading_day"));
+	            parameterMap.put("dateoption_selected", request.getParameter("dateoption_selected"));
+	            parameterMap.put("from_date", request.getParameter("from_date"));
+	            parameterMap.put("to_date", request.getParameter("to_date"));
+	            parameterMap.put("month_year", request.getParameter("month_year"));
+	            parameterMap.put("tariffs", request.getParameter("tariffs"));
+	            parameterMap.put("username", request.getParameter("username"));
+	            
+	            System.out.println(parameterMap);
+	            
+	        } catch (Exception e) {
+	            e.printStackTrace();
+	        } finally {
+	            try {
+	            	//dbConn.close();
+	            } catch (Exception e) {
+	                e.printStackTrace();
+	            }
+	        }
+	        
+	        response.setContentType("application/pdf");
+	        byte[] buffer2 = create_report(path,parameterMap,fileName,request,response);
+	        return Response.ok(buffer2)
+				    .header("Content-Length", buffer2.length)
+				    .header("Content-Disposition","attachment; filename="+fileName+".pdf").build();
+	}
+
+	@Override
+	public Response generate_present_reading_less_report(HttpServletRequest request, HttpServletResponse response) {
+		// TODO Auto-generated method stub
+		HashMap parameterMap = new HashMap();
+		String path = null ;
+		
+		String conn_type = request.getParameter("conn_type").trim();
+		String fileName =  request.getParameter("filename").trim();
+		
+	        try {
+	        	
+				if (conn_type.equalsIgnoreCase("LT")) {
+					dbConnection = databaseObj.getDatabaseConnection();
+				} else if (conn_type.equals("HT")) {
+					dbConnection = databaseObj.getHTDatabaseConnection();
+				}
+	        	
+	        	String contextPath = request.getServletContext().getRealPath("OtherReportsImpl.java");
+	        	File contextfile = new File(contextPath);
+	        	String parentfile = contextfile.getParent();
+	        	
+	        	File f = new File(REPORT_PATH+ fileName );
+				path = f.getPath();
+				
+				String imgPath = REPORT_PATH +REPORT_IMAGE_LOGO_NAME;
+				
+				parameterMap.put("company_name", request.getParameter("company")); 
+				parameterMap.put("subdivision_name",request.getParameter("subdivision_name"));
+				parameterMap.put("location_code",  request.getParameter("location_code"));
+	            parameterMap.put("imgPath", imgPath);
+	            
+	            parameterMap.put("om_section", request.getParameter("om_section"));
+	            parameterMap.put("meter_code", request.getParameter("meter_code"));
+	            parameterMap.put("reading_day", request.getParameter("reading_day"));
+	            parameterMap.put("dateoption_selected", request.getParameter("dateoption_selected"));
+	            parameterMap.put("from_date", request.getParameter("from_date"));
+	            parameterMap.put("to_date", request.getParameter("to_date"));
+	            parameterMap.put("month_year", request.getParameter("month_year"));
+	            parameterMap.put("tariffs", request.getParameter("tariffs"));
+	            parameterMap.put("username", request.getParameter("username"));
+	            
+	            System.out.println(parameterMap);
+	            
+	        } catch (Exception e) {
+	            e.printStackTrace();
+	        } finally {
+	            try {
+	            	//dbConn.close();
+	            } catch (Exception e) {
+	                e.printStackTrace();
+	            }
+	        }
+	        
+	        response.setContentType("application/pdf");
+	        byte[] buffer2 = create_report(path,parameterMap,fileName,request,response);
+	        return Response.ok(buffer2)
+				    .header("Content-Length", buffer2.length)
+				    .header("Content-Disposition","attachment; filename="+fileName+".pdf").build();
+	}
+
+	@Override
+	public Response generate_abnormal_subnormal_report(HttpServletRequest request, HttpServletResponse response) {
+		// TODO Auto-generated method stub
+
+		HashMap parameterMap = new HashMap();
+		String path = null ;
+		
+		String conn_type = request.getParameter("conn_type").trim();
+		String fileName =  request.getParameter("filename").trim();
+		
+	        try {
+	        	
+				if (conn_type.equalsIgnoreCase("LT")) {
+					dbConnection = databaseObj.getDatabaseConnection();
+				} else if (conn_type.equals("HT")) {
+					dbConnection = databaseObj.getHTDatabaseConnection();
+				}
+	        	
+	        	String contextPath = request.getServletContext().getRealPath("OtherReportsImpl.java");
+	        	File contextfile = new File(contextPath);
+	        	String parentfile = contextfile.getParent();
+	        	
+	        	File f = new File(REPORT_PATH+ fileName );
+				path = f.getPath();
+				
+				String imgPath = REPORT_PATH +REPORT_IMAGE_LOGO_NAME;
+				
+				parameterMap.put("company_name", request.getParameter("company")); 
+				parameterMap.put("subdivision_name",request.getParameter("subdivision_name"));
+				parameterMap.put("location_code",  request.getParameter("location_code"));
+	            parameterMap.put("imgPath", imgPath);
+	            
+	            parameterMap.put("report_id", request.getParameter("reporttype_selected"));
+	            parameterMap.put("grouptype", request.getParameter("reportwise_selected"));
+	            parameterMap.put("onloadpercentagebasis", request.getParameter("consumption_selected"));
+	            parameterMap.put("loadpercentage", request.getParameter("consumption_percentage"));
+	            parameterMap.put("report_view_selected", request.getParameter("abnormal_reporttype_selected"));
+	            parameterMap.put("om_section", request.getParameter("om_section"));
+	            parameterMap.put("meter_code", request.getParameter("meter_code"));
+	            parameterMap.put("reading_day", request.getParameter("reading_day"));
+	            parameterMap.put("dateoption_selected", request.getParameter("dateoption_selected"));
+	            parameterMap.put("from_date", request.getParameter("from_date"));
+	            parameterMap.put("to_date", request.getParameter("to_date"));
+	            parameterMap.put("month_year", request.getParameter("month_year"));
+	            parameterMap.put("tariffs", request.getParameter("tariffs"));
+	            parameterMap.put("username", request.getParameter("username"));
+	            
+	            System.out.println(parameterMap);
+	            
+	        } catch (Exception e) {
+	            e.printStackTrace();
+	        } finally {
+	            try {
+	            	//dbConn.close();
+	            } catch (Exception e) {
+	                e.printStackTrace();
+	            }
+	        }
+	        
+	        response.setContentType("application/pdf");
+	        byte[] buffer2 = create_report(path,parameterMap,fileName,request,response);
+	        return Response.ok(buffer2)
+				    .header("Content-Length", buffer2.length)
+				    .header("Content-Disposition","attachment; filename="+fileName+".pdf").build();
+	
+	}
+
+	@Override
+	public Response generate_zero_consumption_report(HttpServletRequest request, HttpServletResponse response) {
+
+		// TODO Auto-generated method stub
+		HashMap parameterMap = new HashMap();
+		String path = null ;
+		
+		String conn_type = request.getParameter("conn_type").trim();
+		String fileName =  request.getParameter("filename").trim();
+		
+	        try {
+	        	
+				if (conn_type.equalsIgnoreCase("LT")) {
+					dbConnection = databaseObj.getDatabaseConnection();
+				} else if (conn_type.equals("HT")) {
+					dbConnection = databaseObj.getHTDatabaseConnection();
+				}
+	        	
+	        	String contextPath = request.getServletContext().getRealPath("OtherReportsImpl.java");
+	        	File contextfile = new File(contextPath);
+	        	String parentfile = contextfile.getParent();
+	        	
+	        	File f = new File(REPORT_PATH+ fileName );
+				path = f.getPath();
+				
+				String imgPath = REPORT_PATH +REPORT_IMAGE_LOGO_NAME;
+				
+				parameterMap.put("company_name", request.getParameter("company")); 
+				parameterMap.put("subdivision_name",request.getParameter("subdivision_name"));
+				parameterMap.put("location_code",  request.getParameter("location_code"));
+	            parameterMap.put("imgPath", imgPath);
+	            
+	            parameterMap.put("report_view_selected", request.getParameter("reporttype_selected"));
+	            parameterMap.put("monthtype", request.getParameter("monthstype"));
+	            parameterMap.put("monthsfrom", request.getParameter("from_months"));
+	            parameterMap.put("monthsto", request.getParameter("to_months"));
+	            parameterMap.put("grouptype", request.getParameter("reportwise_selected"));
+	            parameterMap.put("om_section", request.getParameter("om_section"));
+	            parameterMap.put("meter_code", request.getParameter("meter_code"));
+	            parameterMap.put("reading_day", request.getParameter("reading_day"));
+	            parameterMap.put("dateoption_selected", request.getParameter("dateoption_selected"));
+	            parameterMap.put("from_date", request.getParameter("from_date"));
+	            parameterMap.put("to_date", request.getParameter("to_date"));
+	            parameterMap.put("month_year", request.getParameter("month_year"));
+	            parameterMap.put("tariffs", request.getParameter("tariffs"));
+	            parameterMap.put("username", request.getParameter("username"));
+	            
+	            System.out.println(parameterMap);
+	            
+	        } catch (Exception e) {
+	            e.printStackTrace();
+	        } finally {
+	            try {
+	            	//dbConn.close();
+	            } catch (Exception e) {
+	                e.printStackTrace();
+	            }
+	        }
+	        
+	        response.setContentType("application/pdf");
+	        byte[] buffer2 = create_report(path,parameterMap,fileName,request,response);
+	        return Response.ok(buffer2)
+				    .header("Content-Length", buffer2.length)
+				    .header("Content-Disposition","attachment; filename="+fileName+".pdf").build();
+	
+	}
+
+	@Override
+	public Response generate_high_value_report(HttpServletRequest request, HttpServletResponse response) {
+
+		// TODO Auto-generated method stub
+		HashMap parameterMap = new HashMap();
+		String path = null ;
+		
+		String conn_type = request.getParameter("conn_type").trim();
+		String fileName =  request.getParameter("filename").trim();
+		
+	        try {
+	        	
+				if (conn_type.equalsIgnoreCase("LT")) {
+					dbConnection = databaseObj.getDatabaseConnection();
+				} else if (conn_type.equals("HT")) {
+					dbConnection = databaseObj.getHTDatabaseConnection();
+				}
+	        	
+	        	String contextPath = request.getServletContext().getRealPath("OtherReportsImpl.java");
+	        	File contextfile = new File(contextPath);
+	        	String parentfile = contextfile.getParent();
+	        	
+	        	File f = new File(REPORT_PATH+ fileName );
+				path = f.getPath();
+				
+				String imgPath = REPORT_PATH +REPORT_IMAGE_LOGO_NAME;
+				
+				parameterMap.put("company_name", request.getParameter("company")); 
+				parameterMap.put("subdivision_name",request.getParameter("subdivision_name"));
+				parameterMap.put("location_code",  request.getParameter("location_code"));
+	            parameterMap.put("imgPath", imgPath);
+	            
+	            parameterMap.put("report_view_selected", request.getParameter("reporttype_selected"));
+	            parameterMap.put("from_amount", request.getParameter("cheque_from_amount"));
+	            parameterMap.put("to_amount", request.getParameter("cheque_to_amount"));
+	            parameterMap.put("om_section", request.getParameter("om_section"));
+	            parameterMap.put("meter_code", request.getParameter("meter_code"));
+	            parameterMap.put("reading_day", request.getParameter("reading_day"));
+	            parameterMap.put("dateoption_selected", request.getParameter("dateoption_selected"));
+	            parameterMap.put("from_date", request.getParameter("from_date"));
+	            parameterMap.put("to_date", request.getParameter("to_date"));
+	            parameterMap.put("month_year", request.getParameter("month_year"));
+	            parameterMap.put("tariffs", request.getParameter("tariffs"));
+	            parameterMap.put("username", request.getParameter("username"));
+	            
+	            System.out.println(parameterMap);
+	            
+	        } catch (Exception e) {
+	            e.printStackTrace();
+	        } finally {
+	            try {
+	            	//dbConn.close();
+	            } catch (Exception e) {
+	                e.printStackTrace();
+	            }
+	        }
+	        
+	        response.setContentType("application/pdf");
+	        byte[] buffer2 = create_report(path,parameterMap,fileName,request,response);
+	        return Response.ok(buffer2)
+				    .header("Content-Length", buffer2.length)
+				    .header("Content-Disposition","attachment; filename="+fileName+".pdf").build();
+	
+	}
+
 }
